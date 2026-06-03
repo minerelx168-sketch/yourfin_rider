@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>YourFin Rider — App Mockup</title>
+<style>
+  :root{
+    --primary:#4f46e5; --primary-dark:#4338ca; --primary-light:#eef2ff;
+    --bg:#f5f6fa; --surface:#fff; --text:#111827; --muted:#6b7280; --border:#e5e7eb;
+    --success:#16a34a; --pending:#f59e0b; --rejected:#dc2626;
+    --success-bg:#dcfce7; --pending-bg:#fef3c7; --rejected-bg:#fee2e2;
+    --success-tx:#15803d; --pending-tx:#b45309; --rejected-tx:#b91c1c;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Loma','Noto Sans Thai','Sarabun',-apple-system,'Segoe UI',sans-serif;
+    background:linear-gradient(160deg,#eef2ff 0%,#f5f6fa 40%,#e9ecf5 100%);
+    color:var(--text); padding:48px 24px 80px; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1280px;margin:0 auto}
+  .page-head{text-align:center;margin-bottom:8px}
+  .page-head h1{font-size:34px;letter-spacing:-.5px}
+  .page-head .accent{color:var(--primary)}
+  .page-head p{color:var(--muted);margin-top:8px;font-size:15px}
+  .section-title{display:flex;align-items:center;gap:12px;margin:56px 0 28px;font-size:20px;font-weight:700}
+  .section-title .num{background:var(--primary);color:#fff;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:15px}
+  .section-title small{color:var(--muted);font-weight:400;font-size:14px}
+
+  /* phone gallery */
+  .phones{display:flex;flex-wrap:wrap;gap:34px;justify-content:center}
+  .phone-wrap{width:286px}
+  .phone-wrap .cap{text-align:center;margin-top:14px;font-weight:600;font-size:14px}
+  .phone-wrap .cap span{display:block;color:var(--muted);font-weight:400;font-size:12px;margin-top:2px}
+  .phone{
+    width:286px;height:604px;background:#000;border-radius:42px;padding:11px;
+    box-shadow:0 22px 50px -12px rgba(31,41,55,.45),0 0 0 2px #1f2937;position:relative;
+  }
+  .screen{width:100%;height:100%;background:var(--bg);border-radius:32px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+  .notch{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:104px;height:26px;background:#000;border-radius:0 0 16px 16px;z-index:30}
+  .statusbar{height:40px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 20px 6px;font-size:12px;font-weight:600;color:var(--text);z-index:20}
+  .statusbar.on-primary{color:#fff}
+  .sb-right{display:flex;gap:5px;align-items:center}
+  .sb-right svg{display:block}
+
+  /* app header bar */
+  .appbar{background:var(--primary);color:#fff;padding:6px 18px 16px}
+  .appbar.tall{padding-bottom:22px}
+  .appbar .hi{font-size:13px;opacity:.85}
+  .appbar .name{font-size:19px;font-weight:700;margin-top:1px}
+  .appbar .sub{font-size:12px;opacity:.8;margin-top:2px}
+  .appbar .title{font-size:18px;font-weight:700}
+
+  .body{flex:1;overflow:hidden;padding:14px}
+  .body.scroll{overflow:hidden}
+
+  /* cards */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:13px 14px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .stat .lbl{font-size:11px;color:var(--muted)}
+  .stat .val{font-size:24px;font-weight:800;margin-top:2px;line-height:1}
+  .stat .val small{font-size:13px;font-weight:600;color:var(--muted)}
+  .stat.success .val{color:var(--success)} .stat.primary .val{color:var(--primary)}
+
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:14px;font-size:15px;font-weight:700;border:none;cursor:pointer}
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-danger{background:#fff;color:var(--rejected);border:1.5px solid var(--rejected)}
+  .btn-ghost{background:var(--primary-light);color:var(--primary)}
+
+  .label{font-size:12px;color:var(--muted);margin:14px 2px 6px;font-weight:600}
+  .input{background:#fff;border:1px solid var(--border);border-radius:12px;padding:11px 12px;font-size:14px;color:var(--text)}
+  .input.ph{color:#9ca3af}
+  .field{display:flex;flex-direction:column}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700}
+  .badge.success{background:var(--success-bg);color:var(--success-tx)}
+  .badge.pending{background:var(--pending-bg);color:var(--pending-tx)}
+  .badge.rejected{background:var(--rejected-bg);color:var(--rejected-tx)}
+  .badge.neutral{background:#f1f5f9;color:#475569}
+  .dot{width:8px;height:8px;border-radius:50%}
+
+  /* timeline rows */
+  .row{display:flex;align-items:center;gap:11px;padding:10px 2px;border-bottom:1px solid #f1f2f6}
+  .row:last-child{border-bottom:none}
+  .row .tcol{font-size:12px;color:var(--muted);width:38px;flex-shrink:0;font-weight:600}
+  .row .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex-shrink:0}
+  .row .main{flex:1;min-width:0}
+  .row .main .t1{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .main .t2{font-size:11px;color:var(--muted);margin-top:1px}
+
+  /* chips */
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{padding:7px 13px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid var(--border);background:#fff;color:var(--muted)}
+  .chip.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .seg{display:flex;gap:7px}
+  .seg .s{flex:1;text-align:center;padding:9px 4px;border-radius:11px;font-size:12px;font-weight:700;border:1.5px solid var(--border);background:#fff;color:var(--muted)}
+  .seg .s.on-success{background:var(--success-bg);border-color:var(--success);color:var(--success-tx)}
+
+  /* tab bar */
+  .tabbar{height:62px;background:#fff;border-top:1px solid var(--border);display:flex;padding-bottom:6px}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10px;color:var(--muted);font-weight:600}
+  .tab.on{color:var(--primary)}
+  .tab svg{width:22px;height:22px}
+
+  /* login */
+  .login-logo{width:78px;height:78px;border-radius:22px;background:var(--primary);display:grid;place-items:center;margin:0 auto;box-shadow:0 12px 24px -6px rgba(79,70,229,.5)}
+  .photo-box{height:104px;border-radius:14px;background:linear-gradient(135deg,#312e81,#4f46e5);display:flex;align-items:center;justify-content:center;color:#fff;position:relative;overflow:hidden}
+  .photo-box .shop{position:absolute;inset:0;background:
+     linear-gradient(transparent 60%,rgba(0,0,0,.35)),
+     repeating-linear-gradient(90deg,#1e293b 0 18px,#334155 18px 36px)}
+  .photo-box .tag{position:relative;z-index:2;background:rgba(0,0,0,.45);padding:5px 10px;border-radius:8px;font-size:11px;font-weight:600}
+
+  /* map */
+  .map{position:relative;flex:1;background:#e8edf3;overflow:hidden}
+  .map .streets line{stroke:#cdd6e2;stroke-width:6}
+  .map .streets .big{stroke:#bcc7d6;stroke-width:12}
+  .map .park{fill:#d4e9d2}
+  .map .water{fill:#bfdcf0}
+  .pin{position:absolute;transform:translate(-50%,-100%);filter:drop-shadow(0 3px 3px rgba(0,0,0,.3))}
+  .pin svg{width:26px;height:26px}
+  .me{position:absolute;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:50%;background:#2563eb;border:3px solid #fff;box-shadow:0 0 0 5px rgba(37,99,235,.25)}
+  .legend{position:absolute;left:12px;bottom:12px;background:#fff;border-radius:12px;padding:9px 11px;box-shadow:0 6px 16px rgba(0,0,0,.12);font-size:11px;display:flex;flex-direction:column;gap:6px}
+  .legend .li{display:flex;align-items:center;gap:7px;font-weight:600;color:#374151}
+
+  /* profile */
+  .avatar{width:84px;height:84px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:grid;place-items:center;font-size:32px;font-weight:800;margin:0 auto}
+  .pf-row{display:flex;justify-content:space-between;padding:13px 2px;border-bottom:1px solid #f1f2f6;font-size:13px}
+  .pf-row .k{color:var(--muted)} .pf-row .v{font-weight:600}
+
+  .toast{position:absolute;left:14px;right:14px;bottom:78px;background:#111827;color:#fff;border-radius:14px;padding:12px 14px;font-size:12.5px;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:25}
+  .toast .ck{width:24px;height:24px;border-radius:50%;background:var(--success);display:grid;place-items:center;flex-shrink:0}
+
+  /* ===== dashboard ===== */
+  .laptop{max-width:1120px;margin:0 auto}
+  .browser{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 26px 60px -18px rgba(31,41,55,.5);border:1px solid var(--border)}
+  .chrome{background:#e9edf3;padding:11px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+  .chrome .d{width:12px;height:12px;border-radius:50%}
+  .chrome .url{margin-left:12px;background:#fff;border-radius:7px;padding:5px 12px;font-size:12px;color:var(--muted);flex:1;max-width:340px}
+  .dash{display:flex;min-height:560px}
+  .side{width:210px;background:#1e1b4b;color:#c7d2fe;padding:18px 14px;flex-shrink:0}
+  .side .brand{color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;gap:9px;margin-bottom:22px}
+  .side .logo{width:30px;height:30px;border-radius:9px;background:var(--primary);display:grid;place-items:center}
+  .nav{display:flex;flex-direction:column;gap:5px}
+  .nav a{padding:10px 12px;border-radius:10px;font-size:13.5px;display:flex;align-items:center;gap:10px;color:#c7d2fe}
+  .nav a.on{background:var(--primary);color:#fff;font-weight:700}
+  .nav a svg{width:18px;height:18px}
+  .main{flex:1;background:var(--bg);display:flex;flex-direction:column;min-width:0}
+  .topbar{background:#fff;border-bottom:1px solid var(--border);padding:13px 22px;display:flex;align-items:center;justify-content:space-between}
+  .topbar .h{font-size:17px;font-weight:700}
+  .topbar .r{display:flex;align-items:center;gap:14px;font-size:12.5px;color:var(--muted)}
+  .range{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:6px 11px;font-size:12px;color:var(--text);font-weight:600}
+  .updated{display:flex;align-items:center;gap:6px}
+  .live{width:8px;height:8px;border-radius:50%;background:var(--success)}
+  .avatar-sm{width:30px;height:30px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:grid;place-items:center;font-weight:700;font-size:13px}
+  .content{padding:20px 22px;overflow:hidden}
+  .score-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:13px}
+  .score{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px}
+  .score .l{font-size:11.5px;color:var(--muted)}
+  .score .v{font-size:26px;font-weight:800;margin-top:5px;line-height:1}
+  .score .v small{font-size:13px;color:var(--muted);font-weight:600}
+  .score .tag{font-size:10.5px;margin-top:7px;font-weight:700}
+  .up{color:var(--success)}
+  .charts{display:grid;grid-template-columns:1.15fr 1fr;gap:16px;margin-top:16px}
+  .panel{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px}
+  .panel .pt{font-size:14px;font-weight:700;margin-bottom:14px}
+  .lower{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;padding:7px 8px;border-bottom:1px solid var(--border)}
+  td{padding:9px 8px;border-bottom:1px solid #f1f2f6}
+  .rank{width:22px;height:22px;border-radius:7px;background:var(--primary-light);color:var(--primary);display:inline-grid;place-items:center;font-weight:800;font-size:11px}
+  .rank.g{background:#fef3c7;color:#b45309}
+  .bar-bg{height:7px;border-radius:4px;background:#eef2ff;overflow:hidden;margin-top:4px}
+  .bar-fill{height:100%;background:var(--primary);border-radius:4px}
+  .mini-map{height:100%;min-height:180px;border-radius:10px;position:relative;overflow:hidden;background:#e8edf3}
+  .foot-note{text-align:center;color:var(--muted);font-size:12.5px;margin-top:60px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="page-head">
+    <h1><span class="accent">YourFin</span> Rider — App Mockup</h1>
+    <p>ดีไซน์หน้าจอแอปเซลล์ไรเดอร์ (iOS / Android) และแดชบอร์ดผู้บริหาร · สี/ฟอนต์/ป้ายสถานะตรงกับโค้ดจริง · ข้อมูลตัวอย่างจาก seed</p>
+  </div>
+
+  <!-- ============ MOBILE ============ -->
+  <div class="section-title"><span class="num">1</span> แอปเซลล์ไรเดอร์ (Mobile) <small>Expo · React Native</small></div>
+
+  <div class="phones">
+
+    <!-- 1. LOGIN -->
+    <div class="phone-wrap">
+      <div class="phone"><div class="notch"></div><div class="screen">
+        <div class="statusbar"><span>09:41</span><span class="sb-right">
+          <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="6" width="3" height="5" rx="1" fill="#111827"/><rect x="4" y="4" width="3" height="7" rx="1" fill="#111827"/><rect x="8" y="2" width="3" height="9" rx="1" fill="#111827"/><rect x="12" y="0" width="3" height="11" rx="1" fill="#111827"/></svg>
+          <svg width="24" height="12" viewBox="0 0 24 12"><rect x="0.5" y="1" width="20" height="10" rx="2.5" fill="none" stroke="#111827"/><rect x="2" y="2.5" width="15" height="7" rx="1" fill="#111827"/><rect x="21.5" y="4" width="1.8" height="4" rx="1" fill="#111827"/></svg>
+        </span></div>
+        <div class="body" style="display:flex;flex-direction:column;justify-content:center;gap:6px;padding:24px 22px">
+          <div class="login-logo">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><path d="M5 17l3-8 4 5 3-7 4 10" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="19" cy="19" r="2" fill="#fff"/></svg>
+          </div>
+          <div style="text-align:center;margin-top:14px">
+            <div style="font-size:22px;font-weight:800">YourFin Rider</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:4px">เข้าสู่ระบบสำหรับทีมเซลล์</div>
+          </div>
+          <div class="field" style="margin-top:18px"><span class="label">อีเมล</span><div class="input">somchai@yourfin.co</div></div>
+          <div class="field"><span class="label">รหัสผ่าน</span><div class="input">••••••••</div></div>
+          <button class="btn btn-primary" style="margin-top:20px">เข้าสู่ระบบ</button>
+          <div style="text-align:center;font-size:11px;color:#9ca3af;margin-top:14px">ทดสอบ: somchai@yourfin.co / sales1234</div>
+        </div>
+      </div></div>
+      <div class="cap">เข้าสู่ระบบ<span>JWT · จดจำ session</span></div>
+    </div>
+
+    <!-- 2. HOME -->
+    <div class="phone-wrap">
+      <div class="phone"><div class="notch"></div><div class="screen">
+        <div class="statusbar on-primary"><span>09:41</span><span class="sb-right">
+          <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="6" width="3" height="5" rx="1" fill="#fff"/><rect x="4" y="4" width="3" height="7" rx="1" fill="#fff"/><rect x="8" y="2" width="3" height="9" rx="1" fill="#fff"/><rect x="12" y="0" width="3" height="11" rx="1" fill="#fff"/></svg>
+          <svg width="24" height="12" viewBox="0 0 24 12"><rect x="0.5" y="1" width="20" height="10" rx="2.5" fill="none" stroke="#fff"/><rect x="2" y="2.5" width="15" height="7" rx="1" fill="#fff"/><rect x="21.5" y="4" width="1.8" height="4" rx="1" fill="#fff"/></svg>
+        </span></div>
+        <div class="appbar tall"><div class="hi">สวัสดี 👋</div><div class="name">สมชาย ใจดี</div><div class="sub">กรุงเทพฯ ตะวันออก · เป้าปิดดีล 4/วัน</div></div>
+        <div class="body">
+          <div class="grid2">
+            <div class="card stat primary"><div class="lbl">เช็คอินวันนี้</div><div class="val">5</div></div>
+            <div class="card stat success"><div class="lbl">ปิดดีล</div><div class="val">2</div></div>
+            <div class="card stat"><div class="lbl">Conversion</div><div class="val">40<small>%</small></div></div>
+            <div class="card stat"><div class="lbl">ระยะทางรวม</div><div class="val">12.3<small> กม.</small></div></div>
+          </div>
+          <button class="btn btn-danger" style="margin-top:13px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 6l-2 2 2 2M7 8h7a4 4 0 010 8h-1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            เลิกงาน (Clock Out)
+          </button>
+          <div class="label" style="margin-top:16px">กิจกรรมวันนี้</div>
+          <div class="card" style="padding:4px 12px">
+            <div class="row"><div class="tcol">13:05</div><div class="ic" style="background:var(--rejected-bg)"><span class="dot" style="background:var(--rejected)"></span></div><div class="main"><div class="t1">Oppo Shop เดอะมอลล์</div><div class="t2">Oppo · 5.8 กม.</div></div><span class="badge rejected">ปฏิเสธ</span></div>
+            <div class="row"><div class="tcol">11:20</div><div class="ic" style="background:var(--success-bg)"><span class="dot" style="background:var(--success)"></span></div><div class="main"><div class="t1">TG Phone รามคำแหง</div><div class="t2">Vivo · 1.1 กม.</div></div><span class="badge success">ปิดดีล</span></div>
+            <div class="row"><div class="tcol">09:15</div><div class="ic" style="background:var(--success-bg)"><span class="dot" style="background:var(--success)"></span></div><div class="main"><div class="t1">มือถือ พลาซ่า บางกะปิ</div><div class="t2">Samsung · 2.4 กม.</div></div><span class="badge success">ปิดดีล</span></div>
+            <div class="row"><div class="tcol">08:32</div><div class="ic" style="background:var(--primary-light)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#4f46e5" stroke-width="2"/><path d="M12 7v5l3 2" stroke="#4f46e5" stroke-width="2" stroke-linecap="round"/></svg>
+            </div><div class="main"><div class="t1">เริ่มงาน</div><div class="t2">จุดตั้งต้นของวัน</div></div><span class="badge neutral">เริ่มงาน</span></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><svg viewBox="0 0 24 24" fill="none"><path d="M3 10l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>หน้าหลัก</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-5.3-7-11a7 7 0 1114 0c0 5.7-7 11-7 11z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="2"/></svg>เช็คอินร้าน</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="2"/></svg>แผนที่</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 21a8 8 0 0116 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>โปรไฟล์</div>
+        </div>
+      </div></div>
+      <div class="cap">หน้าหลัก<span>สรุปวันนี้ + Clock In/Out (GPS)</span></div>
+    </div>
+
+    <!-- 3. CHECK-IN -->
+    <div class="phone-wrap">
+      <div class="phone"><div class="notch"></div><div class="screen">
+        <div class="statusbar on-primary"><span>09:41</span><span class="sb-right">
+          <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="6" width="3" height="5" rx="1" fill="#fff"/><rect x="4" y="4" width="3" height="7" rx="1" fill="#fff"/><rect x="8" y="2" width="3" height="9" rx="1" fill="#fff"/><rect x="12" y="0" width="3" height="11" rx="1" fill="#fff"/></svg>
+          <svg width="24" height="12" viewBox="0 0 24 12"><rect x="0.5" y="1" width="20" height="10" rx="2.5" fill="none" stroke="#fff"/><rect x="2" y="2.5" width="15" height="7" rx="1" fill="#fff"/><rect x="21.5" y="4" width="1.8" height="4" rx="1" fill="#fff"/></svg>
+        </span></div>
+        <div class="appbar"><div class="title">เช็คอินร้าน</div></div>
+        <div class="body">
+          <div class="card" style="display:flex;align-items:center;gap:10px;background:var(--primary-light);border-color:#dfe3ff">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-5.3-7-11a7 7 0 1114 0c0 5.7-7 11-7 11z" stroke="#4f46e5" stroke-width="2"/><circle cx="12" cy="10" r="2.5" fill="#4f46e5"/></svg>
+            <div><div style="font-size:11px;color:var(--muted)">พิกัดปัจจุบัน (อัตโนมัติ)</div><div style="font-size:13px;font-weight:700;color:var(--primary)">13.7651, 100.6432</div></div>
+          </div>
+          <div class="photo-box" style="margin-top:11px"><div class="shop"></div><div class="tag">📷 รูปหน้าร้าน — แตะเพื่อถ่ายใหม่</div></div>
+          <span class="label">ชื่อร้าน</span><div class="input">มือถือ พลาซ่า บางกะปิ</div>
+          <span class="label">แบรนด์หลัก</span>
+          <div class="chips"><span class="chip on">Samsung</span><span class="chip">Vivo</span><span class="chip">Oppo</span><span class="chip">Xiaomi</span></div>
+          <span class="label">สถานะการเข้าพบ</span>
+          <div class="seg"><span class="s on-success">ปิดดีล</span><span class="s">รอตัดสินใจ</span><span class="s">ปฏิเสธ</span></div>
+          <span class="label">หมายเหตุ</span><div class="input ph" style="height:46px">เจ้าของร้านสนใจแพ็กเกจผ่อน 0%...</div>
+          <button class="btn btn-primary" style="margin-top:16px">บันทึกการเช็คอิน</button>
+        </div>
+      </div></div>
+      <div class="cap">เช็คอินร้าน<span>GPS + กล้อง + แบรนด์ + สถานะ</span></div>
+    </div>
+
+    <!-- 4. MAP -->
+    <div class="phone-wrap">
+      <div class="phone"><div class="notch"></div><div class="screen">
+        <div class="statusbar on-primary"><span>09:41</span><span class="sb-right">
+          <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="6" width="3" height="5" rx="1" fill="#fff"/><rect x="4" y="4" width="3" height="7" rx="1" fill="#fff"/><rect x="8" y="2" width="3" height="9" rx="1" fill="#fff"/><rect x="12" y="0" width="3" height="11" rx="1" fill="#fff"/></svg>
+          <svg width="24" height="12" viewBox="0 0 24 12"><rect x="0.5" y="1" width="20" height="10" rx="2.5" fill="none" stroke="#fff"/><rect x="2" y="2.5" width="15" height="7" rx="1" fill="#fff"/><rect x="21.5" y="4" width="1.8" height="4" rx="1" fill="#fff"/></svg>
+        </span></div>
+        <div class="appbar"><div class="title">แผนที่ · เส้นทางวันนี้</div></div>
+        <div class="map">
+          <svg width="100%" height="100%" viewBox="0 0 286 460" preserveAspectRatio="xMidYMid slice">
+            <rect width="286" height="460" fill="#e8edf3"/>
+            <path class="park" d="M20 30 h90 v70 h-90 z" rx="8"/>
+            <rect class="water" x="180" y="300" width="120" height="170"/>
+            <g class="streets">
+              <line class="big" x1="0" y1="150" x2="286" y2="150"/>
+              <line class="big" x1="0" y1="300" x2="286" y2="300"/>
+              <line class="big" x1="120" y1="0" x2="120" y2="460"/>
+              <line x1="0" y1="70" x2="286" y2="70"/><line x1="0" y1="220" x2="286" y2="220"/><line x1="0" y1="380" x2="286" y2="380"/>
+              <line x1="50" y1="0" x2="50" y2="460"/><line x1="200" y1="0" x2="200" y2="460"/><line x1="250" y1="0" x2="250" y2="460"/>
+            </g>
+            <polyline points="60,400 75,300 130,225 150,150 210,80" fill="none" stroke="#4f46e5" stroke-width="3" stroke-dasharray="2 6" stroke-linecap="round" opacity="0.7"/>
+          </svg>
+          <div class="me" style="left:60px;top:400px"></div>
+          <div class="pin" style="left:150px;top:150px"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 00-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 00-7-7z" fill="#16a34a"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></svg></div>
+          <div class="pin" style="left:130px;top:225px"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 00-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 00-7-7z" fill="#16a34a"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></svg></div>
+          <div class="pin" style="left:210px;top:80px"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 00-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 00-7-7z" fill="#dc2626"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></svg></div>
+          <div class="pin" style="left:75px;top:300px"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 00-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 00-7-7z" fill="#f59e0b"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></svg></div>
+          <div class="legend">
+            <div class="li"><span class="dot" style="background:var(--success)"></span>ปิดดีล (2)</div>
+            <div class="li"><span class="dot" style="background:var(--pending)"></span>รอตัดสินใจ (1)</div>
+            <div class="li"><span class="dot" style="background:var(--rejected)"></span>ปฏิเสธ (1)</div>
+            <div class="li"><span class="dot" style="background:#2563eb"></span>ตำแหน่งฉัน</div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none"><path d="M3 10l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>หน้าหลัก</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-5.3-7-11a7 7 0 1114 0c0 5.7-7 11-7 11z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="2"/></svg>เช็คอินร้าน</div>
+          <div class="tab on"><svg viewBox="0 0 24 24" fill="none"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="2"/></svg>แผนที่</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 21a8 8 0 0116 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>โปรไฟล์</div>
+        </div>
+      </div></div>
+      <div class="cap">แผนที่<span>หมุดสีตามสถานะ + เส้นทาง</span></div>
+    </div>
+
+    <!-- 5. PROFILE -->
+    <div class="phone-wrap">
+      <div class="phone"><div class="notch"></div><div class="screen">
+        <div class="statusbar on-primary"><span>09:41</span><span class="sb-right">
+          <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="6" width="3" height="5" rx="1" fill="#fff"/><rect x="4" y="4" width="3" height="7" rx="1" fill="#fff"/><rect x="8" y="2" width="3" height="9" rx="1" fill="#fff"/><rect x="12" y="0" width="3" height="11" rx="1" fill="#fff"/></svg>
+          <svg width="24" height="12" viewBox="0 0 24 12"><rect x="0.5" y="1" width="20" height="10" rx="2.5" fill="none" stroke="#fff"/><rect x="2" y="2.5" width="15" height="7" rx="1" fill="#fff"/><rect x="21.5" y="4" width="1.8" height="4" rx="1" fill="#fff"/></svg>
+        </span></div>
+        <div class="appbar"><div class="title">โปรไฟล์</div></div>
+        <div class="body">
+          <div class="card" style="text-align:center;padding-top:20px">
+            <div class="avatar">ส</div>
+            <div style="font-size:18px;font-weight:800;margin-top:12px">สมชาย ใจดี</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">somchai@yourfin.co</div>
+            <span class="badge neutral" style="margin-top:10px">เซลล์ไรเดอร์ (SALES)</span>
+          </div>
+          <div class="card" style="margin-top:12px;padding:4px 14px">
+            <div class="pf-row"><span class="k">ทีม</span><span class="v">Sales</span></div>
+            <div class="pf-row"><span class="k">พื้นที่รับผิดชอบ</span><span class="v">กรุงเทพฯ ตะวันออก</span></div>
+            <div class="pf-row"><span class="k">เป้าปิดดีล/วัน</span><span class="v">4 ดีล</span></div>
+            <div class="pf-row"><span class="k">เบอร์ติดต่อ</span><span class="v">08x-xxx-xxxx</span></div>
+          </div>
+          <button class="btn btn-danger" style="margin-top:16px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 12H3m0 0l4-4m-4 4l4 4M11 4h6a2 2 0 012 2v12a2 2 0 01-2 2h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            ออกจากระบบ
+          </button>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none"><path d="M3 10l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>หน้าหลัก</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-5.3-7-11a7 7 0 1114 0c0 5.7-7 11-7 11z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="2"/></svg>เช็คอินร้าน</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="2"/></svg>แผนที่</div>
+          <div class="tab on"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 21a8 8 0 0116 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>โปรไฟล์</div>
+        </div>
+      </div></div>
+      <div class="cap">โปรไฟล์<span>ข้อมูลผู้ใช้ + ออกจากระบบ</span></div>
+    </div>
+
+  </div>
+
+  <!-- ============ DASHBOARD ============ -->
+  <div class="section-title"><span class="num">2</span> แดชบอร์ดผู้บริหาร (Dashboard) <small>React + Vite · อัปเดตทุก 60 วินาที</small></div>
+
+  <div class="laptop"><div class="browser">
+    <div class="chrome"><span class="d" style="background:#ff5f57"></span><span class="d" style="background:#febc2e"></span><span class="d" style="background:#28c840"></span><span class="url">dashboard.yourfin.co</span></div>
+    <div class="dash">
+      <div class="side">
+        <div class="brand"><span class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 17l3-8 4 5 3-7 4 10" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>YourFin Rider</div>
+        <div class="nav">
+          <a class="on"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="12" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="16" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="2"/></svg>ภาพรวม</a>
+          <a><svg viewBox="0 0 24 24" fill="none"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>จัดอันดับเซลล์</a>
+          <a><svg viewBox="0 0 24 24" fill="none"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>แผนที่ Coverage</a>
+          <a><svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>ฟีดกิจกรรม</a>
+        </div>
+      </div>
+      <div class="main">
+        <div class="topbar">
+          <div class="h">ภาพรวมประสิทธิภาพทีม</div>
+          <div class="r">
+            <span class="range">📅 27 พ.ค. – 3 มิ.ย. 2026</span>
+            <span class="updated"><span class="live"></span>อัปเดตล่าสุด 09:41:05</span>
+            <span class="avatar-sm">ม</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="score-grid">
+            <div class="score"><div class="l">เช็คอินทั้งหมด</div><div class="v">178</div><div class="tag up">▲ 12% wow</div></div>
+            <div class="score"><div class="l">ปิดดีล</div><div class="v" style="color:var(--success)">78</div><div class="tag up">▲ 8%</div></div>
+            <div class="score"><div class="l">Conversion</div><div class="v" style="color:var(--primary)">43.8<small>%</small></div><div class="tag" style="color:var(--muted)">เป้า 45%</div></div>
+            <div class="score"><div class="l">ระยะทางรวม</div><div class="v">1,728<small> กม.</small></div><div class="tag" style="color:var(--muted)">~247 กม./วัน</div></div>
+            <div class="score"><div class="l">เซลล์ที่ออกตรวจ</div><div class="v">4</div><div class="tag" style="color:var(--muted)">/ 4 คน</div></div>
+            <div class="score"><div class="l">ร้านที่เยือน</div><div class="v">8</div><div class="tag up">+3 ใหม่</div></div>
+          </div>
+          <div class="charts">
+            <div class="panel"><div class="pt">แนวโน้มรายวัน — เช็คอิน vs ปิดดีล</div>
+              <svg width="100%" height="170" viewBox="0 0 420 170">
+                <g stroke="#eef0f4"><line x1="0" y1="20" x2="420" y2="20"/><line x1="0" y1="60" x2="420" y2="60"/><line x1="0" y1="100" x2="420" y2="100"/><line x1="0" y1="140" x2="420" y2="140"/></g>
+                <polygon points="10,95 70,80 130,88 190,60 250,70 310,48 380,55 380,150 10,150" fill="rgba(79,70,229,.12)"/>
+                <polyline points="10,95 70,80 130,88 190,60 250,70 310,48 380,55" fill="none" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <polyline points="10,128 70,118 130,124 190,108 250,114 310,96 380,104" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <g fill="#4f46e5"><circle cx="190" cy="60" r="3.5"/><circle cx="310" cy="48" r="3.5"/></g>
+                <g font-size="10" fill="#9ca3af"><text x="6" y="166">28</text><text x="66" y="166">29</text><text x="126" y="166">30</text><text x="186" y="166">31</text><text x="246" y="166">1</text><text x="306" y="166">2</text><text x="372" y="166">3</text></g>
+              </svg>
+              <div style="display:flex;gap:16px;font-size:11px;color:var(--muted);margin-top:6px"><span style="display:flex;align-items:center;gap:5px"><span class="dot" style="background:#4f46e5"></span>เช็คอิน</span><span style="display:flex;align-items:center;gap:5px"><span class="dot" style="background:#16a34a"></span>ปิดดีล</span></div>
+            </div>
+            <div class="panel"><div class="pt">สัดส่วนตามแบรนด์</div>
+              <div style="display:flex;align-items:center;gap:18px">
+                <svg width="130" height="130" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#2563eb" stroke-width="5" stroke-dasharray="23 77" stroke-dashoffset="0" transform="rotate(-90 18 18)"/>
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#7c3aed" stroke-width="5" stroke-dasharray="22 78" stroke-dashoffset="-23" transform="rotate(-90 18 18)"/>
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#db2777" stroke-width="5" stroke-dasharray="21 79" stroke-dashoffset="-45" transform="rotate(-90 18 18)"/>
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#ea580c" stroke-width="5" stroke-dasharray="19 81" stroke-dashoffset="-66" transform="rotate(-90 18 18)"/>
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#0891b2" stroke-width="5" stroke-dasharray="15 85" stroke-dashoffset="-85" transform="rotate(-90 18 18)"/>
+                </svg>
+                <div style="font-size:12px;display:flex;flex-direction:column;gap:7px">
+                  <span style="display:flex;align-items:center;gap:7px"><span class="dot" style="background:#2563eb"></span>Realme · 41</span>
+                  <span style="display:flex;align-items:center;gap:7px"><span class="dot" style="background:#7c3aed"></span>Xiaomi · 39</span>
+                  <span style="display:flex;align-items:center;gap:7px"><span class="dot" style="background:#db2777"></span>Vivo · 37</span>
+                  <span style="display:flex;align-items:center;gap:7px"><span class="dot" style="background:#ea580c"></span>Oppo · 34</span>
+                  <span style="display:flex;align-items:center;gap:7px"><span class="dot" style="background:#0891b2"></span>Samsung · 27</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="lower">
+            <div class="panel"><div class="pt">จัดอันดับเซลล์</div>
+              <table>
+                <tr><th>#</th><th>ชื่อ</th><th>เช็คอิน</th><th>ปิดดีล</th><th>Conv.</th><th>ระยะ (กม.)</th></tr>
+                <tr><td><span class="rank g">1</span></td><td>สมชาย ใจดี</td><td>42</td><td><b style="color:var(--success)">23</b></td><td>54.8%</td><td>418</td></tr>
+                <tr><td><span class="rank">2</span></td><td>สุดา รักงาน</td><td>40</td><td>21</td><td>52.5%</td><td>451</td></tr>
+                <tr><td><span class="rank">3</span></td><td>อนันต์ ขยันขาย</td><td>49</td><td>19</td><td>38.8%</td><td>462</td></tr>
+                <tr><td><span class="rank">4</span></td><td>น้อง พากเพียร</td><td>47</td><td>15</td><td>31.9%</td><td>397</td></tr>
+              </table>
+            </div>
+            <div class="panel" style="display:flex;flex-direction:column"><div class="pt">Coverage Map</div>
+              <div class="mini-map">
+                <svg width="100%" height="100%" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice">
+                  <rect width="300" height="200" fill="#e8edf3"/>
+                  <g stroke="#cdd6e2" stroke-width="4"><line x1="0" y1="70" x2="300" y2="70"/><line x1="0" y1="140" x2="300" y2="140"/><line x1="90" y1="0" x2="90" y2="200"/><line x1="200" y1="0" x2="200" y2="200"/></g>
+                  <g><circle cx="70" cy="55" r="6" fill="#16a34a" fill-opacity=".85"/><circle cx="150" cy="90" r="6" fill="#16a34a" fill-opacity=".85"/><circle cx="120" cy="150" r="6" fill="#f59e0b" fill-opacity=".85"/><circle cx="230" cy="60" r="6" fill="#dc2626" fill-opacity=".85"/><circle cx="210" cy="150" r="6" fill="#16a34a" fill-opacity=".85"/><circle cx="40" cy="120" r="6" fill="#f59e0b" fill-opacity=".85"/><circle cx="260" cy="110" r="6" fill="#16a34a" fill-opacity=".85"/></g>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="foot-note">
+    🛵 <b>YourFin Rider</b> — mockup นี้สะท้อนหน้าจอจากโค้ดจริงในรีโป (<code>mobile/</code> + <code>dashboard/</code>)<br/>
+    เปิดไฟล์นี้ในเบราว์เซอร์เพื่อดูแบบเต็ม · รันแอปจริงได้ตาม README
+  </div>
+
+</div>
+</body>
+</html>
