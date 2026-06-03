@@ -1,134 +1,151 @@
-# YourFin Rider KPI — ระบบติดตาม KPI เซลล์ไรเดอร์แบบเรียลไทม์
+# YourFin Rider 🛵
 
-> **โจทย์:** ธุรกิจสินเชื่อผ่อนโทรศัพท์มือถือ ที่มีทีม "เซลล์ไรเดอร์" เดินทางไปเปิดคู่ค้ากับ
-> ร้านมือถือพาร์ทเนอร์ (Samsung / Vivo / Oppo) เพื่อเสนอโปรแกรมผ่อนชำระและปิดดีล
->
-> **เป้าหมาย:** สร้าง *Automated KPI Dashboard* รองรับวัฒนธรรม **Zero‑Meeting** —
-> ผู้บริหารเห็นผลงานทีมแบบ near real‑time โดยไม่ต้องเรียกประชุมอัปเดตงาน
+ระบบติดตามทีม **"เซลล์ไรเดอร์"** ภาคสนามแบบเรียลไทม์ สำหรับธุรกิจสตาร์ทอัพ **YourFin**
+(สินเชื่อผ่อนชำระโทรศัพท์มือถือ) — เซลล์ขี่มอเตอร์ไซค์ลงพื้นที่ไปเปิดคู่ค้ากับร้านมือถือพาร์ทเนอร์
+(เน้นแบรนด์ Samsung / Vivo / Oppo ฯลฯ) เพื่อเสนอโครงสร้างราคาและระบบผ่อนชำระ
 
-เอกสารชุดนี้คือ **พิมพ์เขียวระบบ (System Blueprint)** ฉบับสถาปนิก พร้อม **โค้ด Google Apps Script
-ที่ใช้งานได้จริง** และ **เทมเพลตโครงสร้าง Google Sheets** เพื่อให้ทีมนำไปตั้งระบบได้ทันที
+> **เป้าหมาย:** เซลล์อัปเดตสถานะหน้างานผ่านแอปมือถือ (เช็คอิน + ถ่ายรูป + เก็บพิกัด GPS)
+> และผู้บริหารเห็นประสิทธิภาพทีมแบบ near real-time ผ่าน Dashboard — ลดการประชุมอัปเดตงาน
 
 ---
 
-## 1. ภาพรวมสถาปัตยกรรม (Architecture at a glance)
-
-เลือก **Google Stack ทั้งสาย** เพื่อให้ทุกชิ้นเชื่อมกันแบบ native, ต้นทุนต่ำ, และทีมเล็กดูแลเองได้:
-
-| ชั้น (Layer) | เครื่องมือที่เลือก | เหตุผล |
-|---|---|---|
-| **Frontend (แอปเซลล์)** | **AppSheet** | No‑code, ลง iOS/Android ได้จริง, จับ GPS อัตโนมัติ, มี Map view หมุดสี, อัปโหลดรูปเข้า Drive, ทำงาน **offline** แล้ว sync ได้ — เหมาะกับงานภาคสนามสัญญาณไม่นิ่ง |
-| **Database** | **Google Sheets** | เป็นทั้งฐานข้อมูลและจุดเชื่อมร่วมของทุกเครื่องมือ ตั้งง่าย ทีมอ่านออก |
-| **Backend Logic** | **Google Apps Script + Distance Matrix API** | คำนวณ "ระยะทางขับขี่จริง" ระหว่างจุดเช็คอิน แล้วเขียนกลับลง Sheet อัตโนมัติ |
-| **Dashboard** | **Looker Studio** | ต่อ Sheets ได้ทันที, ทำ Scorecard / Coverage Map / Conversion ได้ครบ |
+## 🏗️ สถาปัตยกรรม
 
 ```mermaid
-flowchart TD
-    subgraph Field["📱 ภาคสนาม (เซลล์ไรเดอร์)"]
-        A["AppSheet App<br/>iOS / Android"]
+flowchart LR
+    subgraph Field["📱 เซลล์ไรเดอร์ (ภาคสนาม)"]
+        M["Mobile App<br/>Expo · React Native<br/>iOS / Android"]
     end
-    subgraph Google["☁️ Google Workspace"]
-        S[("Google Sheets<br/>Activity_Log")]
-        GAS["Apps Script<br/>• processPendingDistances()<br/>• doPost webhook"]
-        DM["Google Maps<br/>Distance Matrix API"]
-        DRV[("Google Drive<br/>รูปหน้าร้าน")]
+    subgraph Server["☁️ Backend"]
+        API["REST API<br/>Express + TypeScript"]
+        DB[("MySQL<br/>(Prisma ORM)")]
+        GM["Google Maps<br/>Distance Matrix API"]
     end
-    subgraph Exec["📊 ผู้บริหาร (Zero-Meeting)"]
-        L["Looker Studio<br/>Dashboard"]
+    subgraph Exec["📊 ผู้บริหาร"]
+        D["Dashboard<br/>React + Vite"]
     end
 
-    A -- "Clock-in / Check-in<br/>(GPS + เวลา + รูป)" --> S
-    A -- "อัปโหลดรูป" --> DRV
-    A -. "Bot ยิง webhook เมื่อมีเช็คอินใหม่" .-> GAS
-    S -- "time trigger ทุก 1 นาที (เก็บตก)" --> GAS
-    GAS -- "ขอระยะทาง A→B" --> DM
-    DM -- "ระยะทาง (กม.) + เวลา" --> GAS
-    GAS -- "เขียน leg_distance_km กลับ" --> S
-    S -- "near real-time (freshness 15 นาที)" --> L
-    A -- "Map view หมุดสีในแอป" --- A
+    M -- "login · clock-in · check-in<br/>(GPS + รูป + สถานะ)" --> API
+    API -- "อ่าน/เขียนข้อมูล" --> DB
+    API -- "คำนวณระยะทางขับขี่จริง A→B" --> GM
+    D -- "KPI near real-time<br/>(poll ทุก 60 วิ)" --> API
 ```
 
----
-
-## 2. Data Flow ทั้ง 3 เฟส
-
-**เฟส 1 — ภาคสนาม (AppSheet):**
-1. **Clock‑in** "เริ่มงาน" → จับ `lat/lng` + `event_time` อัตโนมัติ → สร้างแถว `event_type = CLOCK_IN` (จุดตั้งต้น A0)
-2. **Store Check‑in** "เพิ่มข้อมูลการเข้าพบ" → จับ GPS อัตโนมัติ → กรอกสั้น ๆ (ชื่อร้าน, แบรนด์, สถานะ สำเร็จ/ปฏิเสธ/รอตัดสินใจ, รูปหน้าร้าน) → แถว `event_type = CHECK_IN`
-3. **Map view** ในแอป แสดงหมุดร้านแยกสี (🟢 ปิดดีล / ⚪ เยือนแล้วยังไม่ปิด / 🟠 รอตัดสินใจ / 🔴 ปฏิเสธ)
-
-**เฟส 2 — หลังบ้าน (Sheets + Apps Script):**
-1. ข้อมูลไหลเข้า `Activity_Log` พร้อม `calc_status = PENDING`
-2. Apps Script ทำงาน (webhook เรียลไทม์ + time trigger เก็บตก) → หา "จุดก่อนหน้า" ของเซลล์คนเดิมในวันเดียวกัน → เรียก **Distance Matrix API** → เขียน `leg_distance_km`, `leg_duration_min`, `calc_status = DONE`
-3. สูตรใน Sheets (หรือ `buildDailySummary()`) สรุปยอดรายวันอัตโนมัติ
-
-**เฟส 3 — แดชบอร์ด (Looker Studio):**
-- ยอดปิดคู่ค้ารายวัน · ระยะทางเดินทางรวม (กม.) · **Coverage Map** · **Conversion Rate** พร้อมฟิลเตอร์ วัน/เซลล์/แบรนด์/พื้นที่
+| ชั้น | เทคโนโลยี | หน้าที่ |
+|---|---|---|
+| **Mobile (แอปเซลล์)** | Expo + React Native + TypeScript | เช็คอิน, ถ่ายรูปหน้าร้าน, เก็บพิกัด GPS, ดูแผนที่หมุดสี, clock-in/out |
+| **Backend** | Node.js + Express + TypeScript + Prisma | REST API, JWT auth + RBAC, คำนวณระยะทาง, สรุป KPI |
+| **Database** | **MySQL** | จัดเก็บผู้ใช้ / ร้านค้า / กิจกรรม GPS |
+| **Backend Logic** | **Google Maps Distance Matrix API** | คำนวณ "ระยะทางขับขี่จริง" ระหว่างจุดเช็คอิน (มี Haversine fallback) |
+| **Dashboard (ผู้บริหาร)** | React + Vite + Recharts + Leaflet | Scorecard, Leaderboard, แนวโน้มรายวัน, Coverage Map, Activity Feed |
 
 ---
 
-## 3. โครงสร้างไฟล์ในรีโป
+## 📁 โครงสร้างรีโป (monorepo)
 
 ```
 yourfin_rifder/
-├─ README.md                     ← ภาพรวม + สถาปัตยกรรม (ไฟล์นี้)
+├─ backend/          ← REST API (Express + Prisma + MySQL) + Google Maps  ✅ พร้อมใช้/ทดสอบแล้ว
+│  ├─ prisma/        ← schema, migrations, seed
+│  └─ src/           ← config, middleware, services, controllers, routes
+├─ mobile/           ← แอปเซลล์ (Expo / React Native)
+├─ dashboard/        ← แดชบอร์ดผู้บริหาร (React + Vite)
 ├─ docs/
-│  ├─ 01-architecture.md         ← เจาะลึกสถาปัตยกรรม, sequence diagram, latency budget
-│  ├─ 02-data-model.md           ← พจนานุกรมข้อมูล (ทุกแท็บ/ทุกคอลัมน์/ชนิดข้อมูล)
-│  ├─ 03-frontend-appsheet.md    ← คู่มือสร้างแอป AppSheet ทีละขั้น (GPS, หมุดสี, ฟอร์ม, สิทธิ์)
-│  ├─ 04-backend-apps-script.md  ← ตั้งค่า GCP/API key, deploy web app, ผูก trigger
-│  ├─ 05-sheets-formulas.md      ← สูตรสรุปรายวัน (QUERY / COUNTIFS / SUMIFS)
-│  ├─ 06-dashboard-looker.md     ← สร้าง Looker Studio + Coverage Map + Conversion
-│  ├─ 07-security-pdpa-cost.md   ← PDPA, ความปลอดภัย API key, ประมาณการต้นทุน, การสเกล
-│  └─ 08-rollout-plan.md         ← แผนสร้าง/นำร่อง/โรลเอาต์ + Definition of Done
-├─ apps-script/
-│  ├─ Config.gs                  ← ค่าคงที่/การตั้งค่า
-│  ├─ DistanceMatrix.gs          ← ตัวห่อเรียก Distance Matrix API (+ cache + backoff)
-│  ├─ Code.gs                    ← sweeper + doPost webhook + triggers
-│  ├─ DailySummary.gs            ← สร้างตารางสรุปรายวันด้วยสคริปต์ (ทางเลือก)
-│  └─ appsscript.json            ← manifest (timezone, scopes, web app)
-└─ sheets-templates/             ← นำเข้าเป็นแท็บใน Google Sheets ได้เลย
-   ├─ Activity_Log.csv
-   ├─ Users.csv
-   ├─ Stores.csv
-   └─ Daily_Summary.csv
+│  └─ API_CONTRACT.md  ← สัญญา API ที่ mobile + dashboard ยึดร่วมกัน
+├─ legacy/           ← พิมพ์เขียวเดิม (No-code: Google Sheets + AppSheet + Apps Script + Looker)
+│                       เก็บไว้เป็น "ทางเลือกแบบไม่เขียนโค้ด" — ดู legacy/README.md
+├─ docker-compose.yml  ← MySQL (+ Adminer) สำหรับ dev
+└─ README.md
 ```
 
----
-
-## 4. Quickstart (ลำดับการตั้งระบบ)
-
-> รายละเอียดแต่ละขั้นอยู่ในโฟลเดอร์ `docs/`
-
-1. **สร้าง Google Sheet** ชื่อ `YourFin Rider KPI` แล้วนำเข้าไฟล์ใน `sheets-templates/` เป็น 4 แท็บ
-   ตั้ง **Time zone = (GMT+07:00) Bangkok** ที่ `File ▸ Settings` *(สำคัญต่อ TODAY()/รายงาน)*
-2. **Google Cloud** เปิดโปรเจกต์ → เปิดใช้ **Distance Matrix API** → ตั้ง **Billing** → สร้าง **API Key** แล้ว *restrict* (ดู `docs/04`)
-3. **Apps Script** (Extensions ▸ Apps Script) วางไฟล์จาก `apps-script/` → ใส่ `MAPS_API_KEY`, `WEBHOOK_SECRET` ใน Script Properties → รัน `setupTriggers()` → Deploy เป็น **Web app**
-4. **AppSheet** สร้างแอปจาก Sheet เดียวกัน → ตั้งฟอร์ม Clock‑in/Check‑in, Map view หมุดสี, Security filter, และ Bot ยิง webhook (ดู `docs/03`)
-5. **Looker Studio** ต่อ Sheet → สร้าง Scorecard / Time series / Coverage Map / Conversion (ดู `docs/06`)
-6. **นำร่อง** กับเซลล์ 2–3 คน 1 สัปดาห์ ปรับจูน แล้วค่อยโรลเอาต์ (ดู `docs/08`)
+> 💡 **มีสองทางเลือกในรีโปนี้:**
+> - **โค้ดจริง (แนะนำสำหรับสเกลธุรกิจ):** `backend/` + `mobile/` + `dashboard/` — ฐานข้อมูล MySQL, คุม UX/ความปลอดภัยได้เต็มที่
+> - **No-code (เริ่มเร็ว/ต้นทุนต่ำ):** `legacy/` — Google Sheets + AppSheet + Looker Studio
 
 ---
 
-## 5. เรื่องที่สถาปนิกต้อง "พูดตรง ๆ" ก่อนเริ่ม
+## 🔄 Data Flow
 
-- **"เรียลไทม์" ที่ทำได้จริงคือ *near* real‑time (ราว 1–15 นาที):** AppSheet sync → Sheet (วินาที) → Apps Script เติมระยะทาง (วินาที–1 นาที) → Looker cache (ตั้งได้ต่ำสุด 15 นาที). สำหรับ Zero‑Meeting daily‑ops ระดับนี้ "พอเหลือเฟือ" หากต้องการ sub‑second จริง ๆ ต้องขยับไป BigQuery + Streaming ซึ่ง overkill สำหรับสเกลนี้
-- **PDPA (พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล):** ระบบเก็บ **พิกัด GPS ของพนักงาน** และ **ข้อมูลร้านค้า/เจ้าของร้าน** → ต้องมี *หนังสือแจ้ง/ขอความยินยอม* ระบุวัตถุประสงค์ และจำกัดสิทธิ์เข้าถึง (ละเอียดใน `docs/07`)
-- **ต้นทุน:** Distance Matrix คิดเป็น *element* (1 leg ≈ 1 element). ประมาณการทีม 10 คน × 15 เช็คอิน/วัน × 22 วัน ≈ 3,300 element/เดือน — อยู่ในระดับหลักร้อยบาท/เดือน (ตรวจราคา + free tier ปัจจุบันของ Google Maps Platform) ส่วน AppSheet คิดต่อผู้ใช้/เดือน
-
----
-
-## 6. ตัวเลือกสถาปัตยกรรม (ถ้าไม่อยากใช้ AppSheet)
-
-| ทางเลือก Frontend | ข้อดี | ข้อแลก |
-|---|---|---|
-| **AppSheet** *(แนะนำ)* | ผูก Sheets/GAS แน่น, GPS+Map+Photo มาให้, offline, สร้างไว | คุม UI ละเอียดได้จำกัด, ค่าไลเซนส์ต่อ user |
-| **Glide** | UI สวย ตั้งไว | ฟีเจอร์ GIS/automation ยืดหยุ่นน้อยกว่า |
-| **FlutterFlow / Flutter (custom)** | คุม UX/แผนที่ได้เต็มที่ | ต้องมีนักพัฒนา, เวลา/งบสูงกว่ามาก |
-
-> เอกสารชุดนี้ออกแบบบน **AppSheet** เป็นหลัก แต่ Data Model / Apps Script / Looker
-> ใช้ซ้ำได้กับทุก frontend เพราะทุกอย่างคุยกันผ่าน Google Sheets เป็นสัญญากลาง (contract)
+1. **ภาคสนาม** — เซลล์เปิดแอป → **เริ่มงาน (Clock-in)** จับ GPS เป็นจุดตั้งต้นของวัน
+2. **เข้าพบร้าน (Check-in)** — จับ GPS อัตโนมัติ, ถ่ายรูปหน้าร้าน, เลือกแบรนด์ + สถานะ (ปิดดีล/รอตัดสินใจ/ปฏิเสธ)
+3. **Backend** — บันทึกลง MySQL แล้วคำนวณ `leg_distance_km` จาก "จุดก่อนหน้า" ของเซลล์คนเดิมในวันเดียวกัน
+   ผ่าน **Google Maps Distance Matrix** (mode=driving) — สะท้อนค่าน้ำมัน/ความเหนื่อยจริง
+4. **เลิกงาน (Clock-out)** — ปิดวันทำงาน
+5. **Dashboard** — ผู้บริหารเห็น KPI รวม, ตารางจัดอันดับเซลล์, แนวโน้มรายวัน, แผนที่ coverage แบบ near real-time
 
 ---
 
-ดูรายละเอียดเชิงลึกได้ที่โฟลเดอร์ [`docs/`](docs/) — เริ่มที่ [`docs/01-architecture.md`](docs/01-architecture.md)
+## 🚀 Quickstart
+
+> ต้องมี **Node.js ≥ 18** และ **Docker** (สำหรับ MySQL) หรือ MySQL ที่ติดตั้งเอง
+
+### 1) ฐานข้อมูล + Backend
+
+```bash
+# จาก root ของ repo — สตาร์ท MySQL
+docker compose up -d mysql
+
+cd backend
+cp .env.example .env            # ใส่ GOOGLE_MAPS_API_KEY ถ้ามี (เว้นว่างได้ — ใช้ Haversine fallback)
+npm install
+npm run prisma:migrate          # สร้างตาราง
+npm run seed                    # ข้อมูลตัวอย่าง (ผู้ใช้/ร้าน/กิจกรรม 10 วัน)
+npm run dev                     # API ที่ http://localhost:4000
+```
+
+### 2) Dashboard (ผู้บริหาร)
+
+```bash
+cd dashboard
+npm install
+cp .env.example .env            # VITE_API_URL=http://localhost:4000/api
+npm run dev                     # เปิดเบราว์เซอร์ตามที่ Vite แจ้ง
+```
+
+### 3) Mobile (เซลล์)
+
+```bash
+cd mobile
+npm install
+npx expo start                  # สแกน QR ด้วย Expo Go (iOS/Android)
+```
+> บนอุปกรณ์จริง ต้องตั้ง `apiBaseUrl` ใน `mobile/app.json` ให้ชี้ไปที่ **LAN IP** ของเครื่อง backend
+> (เช่น `http://192.168.1.50:4000/api`) เพราะ `localhost` บนมือถือหมายถึงตัวมือถือเอง
+
+---
+
+## 🔑 บัญชีทดสอบ (จาก seed)
+
+| Role | email | password | ใช้กับ |
+|---|---|---|---|
+| ADMIN | `admin@yourfin.co` | `admin1234` | จัดการผู้ใช้ |
+| MANAGER | `manager@yourfin.co` | `manager1234` | **Dashboard** |
+| SALES | `somchai@yourfin.co` *(และ suda / anan / nong)* | `sales1234` | **Mobile app** |
+
+---
+
+## 🗺️ Google Maps
+
+ใส่ `GOOGLE_MAPS_API_KEY` (เปิดใช้ **Distance Matrix API** + Billing) ใน `backend/.env`
+เพื่อให้ระบบคำนวณระยะทางขับขี่จริงตามถนน หากเว้นว่าง ระบบจะใช้ **Haversine** (เส้นตรง) เป็น fallback
+ทำให้รัน/เดโมได้ทันทีโดยไม่ต้องมีคีย์
+
+---
+
+## 🔒 ข้อควรระวังก่อนขึ้นจริง (Production)
+
+- เปลี่ยน `JWT_SECRET` เป็นค่าสุ่มยาว และตั้ง `CORS_ORIGINS` ให้เจาะจงโดเมน dashboard
+- ย้ายการเก็บรูปจาก local disk ไปที่ object storage (S3 / Google Cloud Storage)
+- จำกัดสิทธิ์ (restrict) Google Maps API key และตั้ง budget alert
+- **PDPA:** ระบบเก็บ *พิกัด GPS ของพนักงาน* และ *ข้อมูลร้านค้า/เจ้าของร้าน* →
+  ต้องมีหนังสือแจ้ง/ขอความยินยอม ระบุวัตถุประสงค์ และจำกัดสิทธิ์การเข้าถึงข้อมูล
+
+---
+
+## 📚 เอกสารเพิ่มเติม
+
+- [`docs/API_CONTRACT.md`](docs/API_CONTRACT.md) — สัญญา API ทั้งหมด
+- [`backend/README.md`](backend/README.md) — รายละเอียด backend
+- [`mobile/README.md`](mobile/README.md) — รายละเอียดแอปเซลล์
+- [`dashboard/README.md`](dashboard/README.md) — รายละเอียดแดชบอร์ด
+- [`legacy/README.md`](legacy/README.md) — พิมพ์เขียว No-code ทางเลือก

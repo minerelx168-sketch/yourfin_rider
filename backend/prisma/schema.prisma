@@ -1,0 +1,142 @@
+// YourFin Rider — data model (MySQL)
+// แปลงจากพิมพ์เขียว Google Sheets เดิมให้เป็นฐานข้อมูลเชิงสัมพันธ์
+// ดู ../README.md และ docs/ สำหรับรายละเอียด
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ── สิทธิ์ผู้ใช้ ───────────────────────────────────────────────
+enum Role {
+  SALES // เซลล์ไรเดอร์ภาคสนาม
+  MANAGER // หัวหน้าทีม — เห็น dashboard
+  ADMIN // ผู้ดูแลระบบ
+}
+
+// ── ประเภทเหตุการณ์ GPS ───────────────────────────────────────
+enum EventType {
+  CLOCK_IN // เริ่มงาน (จุดตั้งต้นของวัน)
+  CHECK_IN // เข้าพบร้านค้า
+  CLOCK_OUT // เลิกงาน
+}
+
+// ── แบรนด์มือถือหลักที่ร้านจำหน่าย ─────────────────────────────
+enum Brand {
+  SAMSUNG
+  VIVO
+  OPPO
+  XIAOMI
+  REALME
+  APPLE
+  OTHER
+}
+
+// ── ผลการเข้าพบร้าน ───────────────────────────────────────────
+enum VisitStatus {
+  SUCCESS // ปิดดีล/เปิดคู่ค้าสำเร็จ
+  PENDING // รอตัดสินใจ
+  REJECTED // ปฏิเสธ
+}
+
+// ── สถานะการคำนวณระยะทางของ backend ──────────────────────────
+enum CalcStatus {
+  PENDING // รอคำนวณ
+  DONE // คำนวณแล้ว (Google Maps หรือ Haversine fallback)
+  SKIP // จุดแรกของวัน ไม่มีจุดก่อนหน้า
+  ERROR // คำนวณไม่สำเร็จ
+}
+
+// ── สถานะคู่ค้าของร้าน ────────────────────────────────────────
+enum PartnerStatus {
+  PROSPECT // ยังไม่ปิด
+  ACTIVE // เป็นคู่ค้าแล้ว
+  CLOSED // ยุติความสัมพันธ์
+}
+
+model User {
+  id               String   @id @default(cuid())
+  email            String   @unique
+  passwordHash     String
+  name             String
+  phone            String?
+  team             String?
+  region           String?
+  role             Role     @default(SALES)
+  active           Boolean  @default(true)
+  targetDailyClose Int      @default(3) // เป้าปิดดีลต่อวัน
+  photoUrl         String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  activities    Activity[]
+  storesCreated Store[]    @relation("StoreCreatedBy")
+
+  @@index([role])
+  @@map("users")
+}
+
+model Store {
+  id             String        @id @default(cuid())
+  name           String
+  brand          Brand         @default(OTHER)
+  province       String?
+  district       String?
+  address        String?       @db.Text
+  lat            Float?
+  lng            Float?
+  partnerStatus  PartnerStatus @default(PROSPECT)
+  ownerName      String?
+  ownerContact   String?
+  firstVisitDate DateTime?
+  createdById    String?
+  createdBy      User?         @relation("StoreCreatedBy", fields: [createdById], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  activities Activity[]
+
+  @@index([brand])
+  @@index([partnerStatus])
+  @@map("stores")
+}
+
+model Activity {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  eventType EventType
+  eventTime DateTime  @default(now())
+  workDate  DateTime  @db.Date // วันทำงาน (โซนเวลา Asia/Bangkok) ใช้จัดกลุ่ม/รายงาน
+  lat       Float
+  lng       Float
+
+  // เฉพาะ CHECK_IN
+  storeId     String?
+  store       Store?       @relation(fields: [storeId], references: [id])
+  storeName   String?
+  brand       Brand?
+  visitStatus VisitStatus?
+  photoUrl    String?
+  note        String?      @db.Text
+
+  // คำนวณโดย backend (ระยะทางจากจุดก่อนหน้าในวันเดียวกัน)
+  prevLat        Float?
+  prevLng        Float?
+  legDistanceKm  Float?     @default(0)
+  legDurationMin Float?     @default(0)
+  calcStatus     CalcStatus @default(PENDING)
+  processedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, workDate])
+  @@index([workDate])
+  @@index([eventType])
+  @@index([visitStatus])
+  @@map("activities")
+}

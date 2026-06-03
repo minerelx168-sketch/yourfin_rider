@@ -1,0 +1,41 @@
+# YourFin Rider — local dev infrastructure
+# ใช้สำหรับรัน MySQL (และ Adminer สำหรับดูข้อมูล) บนเครื่อง dev
+#
+#   docker compose up -d        # start MySQL + Adminer
+#   docker compose down         # stop
+#   docker compose down -v      # stop + ลบข้อมูลทั้งหมด
+#
+# ค่าเริ่มต้นตรงกับ backend/.env.example
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: yourfin-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: yourfin_rider
+      MYSQL_USER: yourfin
+      MYSQL_PASSWORD: yourfin_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./.docker-data/mysql:/var/lib/mysql
+    command: --default-authentication-plugin=caching_sha2_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # เครื่องมือดู/จัดการ MySQL ผ่านเว็บ — เปิดที่ http://localhost:8080
+  adminer:
+    image: adminer:4
+    container_name: yourfin-adminer
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
