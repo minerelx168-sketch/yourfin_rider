@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "YourFin Rider",
+    "slug": "mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "แอปใช้ตำแหน่งของคุณเพื่อบันทึกการเช็คอินและการเข้า-ออกงาน",
+        "NSCameraUsageDescription": "แอปใช้กล้องเพื่อถ่ายรูปหน้าร้านตอนเช็คอิน"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "แอปใช้ตำแหน่งของคุณเพื่อบันทึกการเช็คอินและการเข้า-ออกงาน"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "แอปใช้กล้องเพื่อถ่ายรูปหน้าร้านตอนเช็คอิน"
+        }
+      ]
+    ],
+    "extra": {
+      "apiBaseUrl": "http://localhost:4000/api"
+    }
+  }
+}
