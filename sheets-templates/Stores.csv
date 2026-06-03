@@ -1,0 +1,3 @@
+store_id,store_name,brand,province,district,address,lat,lng,partner_status,first_visit_date,owner_contact,created_by
+STORE-0001,ร้านมือถือสยามโฟน,Samsung,กรุงเทพมหานคร,ปทุมวัน,123 ถ.พระราม 1,13.746600,100.534700,Active,2026-06-03,089xxxxxxx,somchai@yourfin.co.th
+STORE-0002,Vivo Shop ราชเทวี,Vivo,กรุงเทพมหานคร,ราชเทวี,456 ถ.เพชรบุรี,13.751800,100.541900,Prospect,2026-06-03,088xxxxxxx,somchai@yourfin.co.th

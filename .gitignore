@@ -1,0 +1,15 @@
+# Apps Script / clasp
+.clasp.json
+.clasprc.json
+node_modules/
+
+# Secrets — อย่า commit คีย์/ความลับเด็ดขาด (เก็บใน Script Properties)
+*.key
+.env
+secrets.*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

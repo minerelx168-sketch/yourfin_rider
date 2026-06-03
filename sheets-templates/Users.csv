@@ -1,0 +1,4 @@
+sales_email,sales_name,phone,team,region,role,active,target_daily_close,photo_url
+somchai@yourfin.co.th,สมชาย ใจดี,0810000001,Team A,กรุงเทพ-เหนือ,Sales,Y,3,
+malee@yourfin.co.th,มาลี รักงาน,0810000002,Team A,กรุงเทพ-ใต้,Sales,Y,3,
+manager@yourfin.co.th,หัวหน้าทีม,0810000009,Team A,กรุงเทพ,Manager,Y,0,
