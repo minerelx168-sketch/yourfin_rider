@@ -1,0 +1,100 @@
+.map-card {
+  overflow: hidden;
+  padding: 0;
+}
+
+.map-shell {
+  position: relative;
+}
+
+.map-leaflet {
+  width: 100%;
+  height: calc(100vh - 220px);
+  min-height: 480px;
+  z-index: 1;
+}
+
+/* Legend overlay */
+.map-legend {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  z-index: 500;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  padding: 12px 14px;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 180px;
+}
+.legend-title {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+}
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
+  box-shadow: 0 0 0 1px var(--border-strong);
+  flex-shrink: 0;
+}
+.legend-count {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.map-empty-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 400;
+  display: grid;
+  place-items: center;
+  background: rgba(241, 245, 249, 0.7);
+  backdrop-filter: blur(1px);
+  pointer-events: none;
+}
+
+/* Popup */
+.map-popup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 200px;
+  font-size: 13px;
+}
+.popup-store {
+  font-size: 14px;
+  color: var(--text);
+}
+.popup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.popup-key {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* Leaflet popup tweaks to match theme */
+.leaflet-popup-content {
+  margin: 12px 14px;
+}
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius-sm);
+}
