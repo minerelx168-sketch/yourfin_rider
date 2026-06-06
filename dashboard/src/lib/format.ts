@@ -127,6 +127,7 @@ export const WITHDRAWAL_STATUS_LABEL: Record<WithdrawalStatus, string> = {
 export const ROLE_LABEL: Record<Role, string> = {
   SALES: 'เซลล์',
   MANAGER: 'ผู้จัดการ',
+  FINANCE: 'ผู้จัดการฝ่ายการเงิน',
   ADMIN: 'ผู้ดูแลระบบ',
 };
 

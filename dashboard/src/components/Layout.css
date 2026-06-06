@@ -89,6 +89,17 @@
 .nav-icon svg {
   display: block;
 }
+.nav-section-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 700;
+  padding: 14px 12px 4px;
+}
+.nav-section-label:first-child {
+  padding-top: 4px;
+}
 
 .sidebar-footer {
   padding: 16px 20px;
@@ -275,6 +286,7 @@
   }
   .brand-text,
   .nav-item span:not(.nav-icon),
+  .nav-section-label,
   .zero-meeting {
     display: none;
   }

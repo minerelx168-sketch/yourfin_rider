@@ -1,6 +1,6 @@
 // Types mirroring the YourFin Rider API contract (docs/API_CONTRACT.md)
 
-export type Role = 'SALES' | 'MANAGER' | 'ADMIN';
+export type Role = 'SALES' | 'MANAGER' | 'FINANCE' | 'ADMIN';
 
 export type EventType = 'CLOCK_IN' | 'CHECK_IN' | 'CLOCK_OUT';
 
@@ -129,6 +129,29 @@ export interface AdminWithdrawalsResponse {
 
 export interface WithdrawalResponse {
   withdrawal: Withdrawal;
+}
+
+// ---- Finance summary (GET /admin/finance/summary) ----
+
+/** One recently-paid withdrawal shown on the finance overview. */
+export interface FinancePayout {
+  id: string;
+  riderName: string;
+  region: string | null;
+  amount: number;
+  bankName: string | null;
+  slipUrl: string | null;
+  processedAt: string;
+}
+
+export interface FinanceSummary {
+  pending: WithdrawalSummaryBucket;
+  approved: WithdrawalSummaryBucket;
+  paid: WithdrawalSummaryBucket;
+  rejected: WithdrawalSummaryBucket;
+  paidToday: WithdrawalSummaryBucket;
+  paidThisMonth: WithdrawalSummaryBucket;
+  recentPayouts: FinancePayout[];
 }
 
 /** Action sent to PATCH /admin/withdrawals/:id. */

@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import { ApiError } from '../api/client';
+import { homeForRole } from '../components/ProtectedRoute';
 import './LoginPage.css';
 
 export function LoginPage() {
@@ -14,9 +15,15 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Already authenticated as a dashboard user -> go straight in.
-  if (!initializing && token && user && (user.role === 'MANAGER' || user.role === 'ADMIN')) {
-    return <Navigate to="/" replace />;
+  // Already authenticated as a dashboard user -> go straight in (to the right
+  // landing page for the role).
+  if (
+    !initializing &&
+    token &&
+    user &&
+    (user.role === 'MANAGER' || user.role === 'ADMIN' || user.role === 'FINANCE')
+  ) {
+    return <Navigate to={homeForRole(user.role)} replace />;
   }
 
   const onSubmit = async (e: FormEvent) => {
@@ -25,13 +32,11 @@ export function LoginPage() {
     setSubmitting(true);
     try {
       const u = await login(email.trim(), password);
-      if (u.role === 'SALES') {
-        // Logged in fine, but no dashboard access — let the guard show the
-        // friendly message.
-        navigate('/', { replace: true });
-      } else {
-        navigate('/', { replace: true });
-      }
+      // SALES has no dashboard access (the guard shows a friendly message at
+      // '/'); FINANCE lands on its own overview; others on the sales overview.
+      navigate(u.role === 'SALES' ? '/' : homeForRole(u.role), {
+        replace: true,
+      });
     } catch (err) {
       const message =
         err instanceof ApiError

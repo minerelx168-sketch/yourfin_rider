@@ -1,9 +1,14 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthProvider';
+import { useAuth } from './auth/useAuth';
 import { RangeProvider } from './range/RangeProvider';
 import { LastUpdatedProvider } from './lastupdated/LastUpdatedProvider';
-import { ProtectedRoute } from './components/ProtectedRoute';
+import {
+  ProtectedRoute,
+  RoleGate,
+  homeForRole,
+} from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
 import { LoginPage } from './pages/LoginPage';
 import { LoadingBlock } from './components/StateBlock';
@@ -32,6 +37,14 @@ const WithdrawalsPage = lazy(() =>
 const AffiliatePage = lazy(() =>
   import('./pages/AffiliatePage').then((m) => ({ default: m.AffiliatePage })),
 );
+const FinanceOverviewPage = lazy(() =>
+  import('./pages/FinanceOverviewPage').then((m) => ({
+    default: m.FinanceOverviewPage,
+  })),
+);
+const SlipVaultPage = lazy(() =>
+  import('./pages/SlipVaultPage').then((m) => ({ default: m.SlipVaultPage })),
+);
 
 /** Providers + chrome that wrap every authenticated dashboard page. */
 function DashboardShell() {
@@ -44,6 +57,12 @@ function DashboardShell() {
       </RangeProvider>
     </ProtectedRoute>
   );
+}
+
+/** Sends each role to its proper landing page (sales overview vs finance). */
+function RoleHomeRedirect() {
+  const { user } = useAuth();
+  return <Navigate to={homeForRole(user?.role)} replace />;
 }
 
 export default function App() {
@@ -60,14 +79,77 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route element={<DashboardShell />}>
-              <Route path="/" element={<OverviewPage />} />
-              <Route path="/leaderboard" element={<LeaderboardPage />} />
-              <Route path="/map" element={<MapPage />} />
-              <Route path="/feed" element={<FeedPage />} />
-              <Route path="/withdrawals" element={<WithdrawalsPage />} />
-              <Route path="/affiliate" element={<AffiliatePage />} />
+              {/* Sales analytics — MANAGER + ADMIN only (FINANCE redirected). */}
+              <Route
+                path="/"
+                element={
+                  <RoleGate allow={['MANAGER', 'ADMIN']}>
+                    <OverviewPage />
+                  </RoleGate>
+                }
+              />
+              <Route
+                path="/leaderboard"
+                element={
+                  <RoleGate allow={['MANAGER', 'ADMIN']}>
+                    <LeaderboardPage />
+                  </RoleGate>
+                }
+              />
+              <Route
+                path="/map"
+                element={
+                  <RoleGate allow={['MANAGER', 'ADMIN']}>
+                    <MapPage />
+                  </RoleGate>
+                }
+              />
+              <Route
+                path="/feed"
+                element={
+                  <RoleGate allow={['MANAGER', 'ADMIN']}>
+                    <FeedPage />
+                  </RoleGate>
+                }
+              />
+
+              {/* Finance — FINANCE + MANAGER + ADMIN. */}
+              <Route
+                path="/finance"
+                element={
+                  <RoleGate allow={['FINANCE', 'MANAGER', 'ADMIN']}>
+                    <FinanceOverviewPage />
+                  </RoleGate>
+                }
+              />
+              <Route
+                path="/withdrawals"
+                element={
+                  <RoleGate allow={['FINANCE', 'MANAGER', 'ADMIN']}>
+                    <WithdrawalsPage />
+                  </RoleGate>
+                }
+              />
+              <Route
+                path="/finance/slips"
+                element={
+                  <RoleGate allow={['FINANCE', 'MANAGER', 'ADMIN']}>
+                    <SlipVaultPage />
+                  </RoleGate>
+                }
+              />
+
+              {/* Affiliate — ADMIN only. */}
+              <Route
+                path="/affiliate"
+                element={
+                  <RoleGate allow={['ADMIN']}>
+                    <AffiliatePage />
+                  </RoleGate>
+                }
+              />
             </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<RoleHomeRedirect />} />
           </Routes>
         </Suspense>
       </BrowserRouter>

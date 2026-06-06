@@ -8,6 +8,7 @@ import type {
   AdminWithdrawalsResponse,
   DateRange,
   FeedResponse,
+  FinanceSummary,
   LeaderboardResponse,
   LoginResponse,
   MapResponse,
@@ -183,7 +184,12 @@ export async function uploadSlip(file: File): Promise<UploadResponse> {
   return request<UploadResponse>('/uploads', { method: 'POST', body: form });
 }
 
-// ---- Admin: withdrawals (ADMIN / MANAGER) ----
+// ---- Admin: withdrawals & finance (ADMIN / MANAGER / FINANCE) ----
+
+/** Finance overview totals + recent payouts for the FINANCE dashboard. */
+export function getFinanceSummary(): Promise<FinanceSummary> {
+  return request<FinanceSummary>('/admin/finance/summary');
+}
 
 export function getAdminWithdrawals(params?: {
   status?: WithdrawalStatus;
