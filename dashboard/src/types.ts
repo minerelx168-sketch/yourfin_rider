@@ -30,8 +30,121 @@ export interface User {
   active: boolean;
   targetDailyClose: number;
   photoUrl: string | null;
+  // คอมมิชชั่น & affiliate
+  commissionPerDeal: number;
+  referralPercent: number;
+  referredById: string | null;
+  bankName: string | null;
+  bankAccountNumber: string | null;
+  bankAccountName: string | null;
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface UsersResponse {
+  users: User[];
+}
+
+/** Payload for PATCH /users/:id — all fields optional. */
+export interface UserUpdate {
+  name?: string;
+  phone?: string | null;
+  team?: string | null;
+  region?: string | null;
+  role?: Role;
+  active?: boolean;
+  targetDailyClose?: number;
+  commissionPerDeal?: number;
+  referralPercent?: number;
+  referredById?: string | null;
+  bankName?: string | null;
+  bankAccountNumber?: string | null;
+  bankAccountName?: string | null;
+}
+
+export interface UserResponse {
+  user: User;
+}
+
+// ---- Commission & withdrawals ----
+
+export type CommissionType = 'DEAL' | 'REFERRAL' | 'ADJUSTMENT';
+
+export interface CommissionEntry {
+  id: string;
+  userId: string;
+  type: CommissionType;
+  amount: number;
+  level: number;
+  sourceActivityId: string | null;
+  sourceUserId: string | null;
+  note: string | null;
+  createdAt: string;
+}
+
+export type WithdrawalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'PAID';
+
+/** Minimal user info attached to admin withdrawal rows. */
+export interface WithdrawalUser {
+  id: string;
+  name: string;
+  region: string | null;
+  phone: string | null;
+}
+
+export interface Withdrawal {
+  id: string;
+  userId: string;
+  amount: number;
+  status: WithdrawalStatus;
+  bankName: string | null;
+  bankAccountNumber: string | null;
+  bankAccountName: string | null;
+  note: string | null;
+  slipUrl: string | null;
+  adminNote: string | null;
+  processedById: string | null;
+  requestedAt: string;
+  processedAt: string | null;
+  user?: WithdrawalUser;
+}
+
+/** A { count, amount } bucket in the withdrawals summary. */
+export interface WithdrawalSummaryBucket {
+  count: number;
+  amount: number;
+}
+
+export interface WithdrawalSummary {
+  pending: WithdrawalSummaryBucket;
+  approved: WithdrawalSummaryBucket;
+  paid: WithdrawalSummaryBucket;
+  rejected: WithdrawalSummaryBucket;
+}
+
+export interface AdminWithdrawalsResponse {
+  withdrawals: Withdrawal[];
+  summary: WithdrawalSummary;
+}
+
+export interface WithdrawalResponse {
+  withdrawal: Withdrawal;
+}
+
+/** Action sent to PATCH /admin/withdrawals/:id. */
+export type WithdrawalAction = 'APPROVE' | 'REJECT' | 'PAY';
+
+export interface ProcessWithdrawalBody {
+  action: WithdrawalAction;
+  slipUrl?: string;
+  adminNote?: string;
+}
+
+/** Response from POST /uploads. */
+export interface UploadResponse {
+  url: string;
+  filename: string;
+  size: number;
 }
 
 export interface LoginResponse {

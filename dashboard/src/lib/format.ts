@@ -1,6 +1,12 @@
 // Formatting + label helpers (Thai UI).
 
-import type { Brand, EventType, VisitStatus } from '../types';
+import type {
+  Brand,
+  EventType,
+  Role,
+  VisitStatus,
+  WithdrawalStatus,
+} from '../types';
 
 const TZ = 'Asia/Bangkok';
 
@@ -89,6 +95,14 @@ export function formatPercent(n: number): string {
   }).format(n)}%`;
 }
 
+/** Money with thousands separators + a leading ฿ (e.g. "฿1,250"). */
+export function formatBaht(n: number): string {
+  return `฿${new Intl.NumberFormat('th-TH', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(n ?? 0)}`;
+}
+
 // ---- Label maps (Thai) ----
 
 export const VISIT_STATUS_LABEL: Record<VisitStatus, string> = {
@@ -101,6 +115,19 @@ export const EVENT_TYPE_LABEL: Record<EventType, string> = {
   CLOCK_IN: 'เริ่มงาน',
   CHECK_IN: 'เช็คอินร้าน',
   CLOCK_OUT: 'เลิกงาน',
+};
+
+export const WITHDRAWAL_STATUS_LABEL: Record<WithdrawalStatus, string> = {
+  PENDING: 'รออนุมัติ',
+  APPROVED: 'อนุมัติแล้ว',
+  PAID: 'จ่ายแล้ว',
+  REJECTED: 'ปฏิเสธ',
+};
+
+export const ROLE_LABEL: Record<Role, string> = {
+  SALES: 'เซลล์',
+  MANAGER: 'ผู้จัดการ',
+  ADMIN: 'ผู้ดูแลระบบ',
 };
 
 export const BRAND_LABEL: Record<Brand, string> = {

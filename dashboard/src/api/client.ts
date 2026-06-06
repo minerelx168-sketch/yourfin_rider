@@ -5,6 +5,7 @@
 
 import { getToken } from '../auth/tokenStore';
 import type {
+  AdminWithdrawalsResponse,
   DateRange,
   FeedResponse,
   LeaderboardResponse,
@@ -12,8 +13,14 @@ import type {
   MapResponse,
   MeResponse,
   Overview,
+  ProcessWithdrawalBody,
   TimeseriesResponse,
+  UploadResponse,
   User,
+  UsersResponse,
+  UserUpdate,
+  WithdrawalResponse,
+  WithdrawalStatus,
 } from '../types';
 
 export const API_URL: string =
@@ -54,8 +61,12 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const { method = 'GET', body, query } = options;
   const token = getToken();
 
+  // FormData bodies (file uploads) are sent as-is so the browser can set the
+  // multipart boundary; everything else is JSON.
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+
   const headers: Record<string, string> = {};
-  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  if (body !== undefined && !isFormData) headers['Content-Type'] = 'application/json';
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   let res: Response;
@@ -63,7 +74,12 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     res = await fetch(`${API_URL}${path}${buildQuery(query)}`, {
       method,
       headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body:
+        body === undefined
+          ? undefined
+          : isFormData
+            ? (body as FormData)
+            : JSON.stringify(body),
     });
   } catch {
     // Network / CORS / server-down errors never reach a Response.
@@ -139,4 +155,53 @@ export function getActivityFeed(
   return request<FeedResponse>('/dashboard/feed', {
     query: { limit, ...rangeParams(range) },
   });
+}
+
+// ---- Users (ADMIN) ----
+
+export function getUsers(): Promise<UsersResponse> {
+  return request<UsersResponse>('/users');
+}
+
+export async function updateUser(id: string, body: UserUpdate): Promise<User> {
+  const res = await request<{ user: User }>(`/users/${id}`, {
+    method: 'PATCH',
+    body,
+  });
+  return res.user;
+}
+
+// ---- Uploads ----
+
+/**
+ * Uploads an image (e.g. a payment slip) as multipart/form-data under the
+ * `photo` field. Content-Type is intentionally left for the browser to set.
+ */
+export async function uploadSlip(file: File): Promise<UploadResponse> {
+  const form = new FormData();
+  form.append('photo', file);
+  return request<UploadResponse>('/uploads', { method: 'POST', body: form });
+}
+
+// ---- Admin: withdrawals (ADMIN / MANAGER) ----
+
+export function getAdminWithdrawals(params?: {
+  status?: WithdrawalStatus;
+  from?: string;
+  to?: string;
+}): Promise<AdminWithdrawalsResponse> {
+  return request<AdminWithdrawalsResponse>('/admin/withdrawals', {
+    query: params,
+  });
+}
+
+export async function processWithdrawal(
+  id: string,
+  body: ProcessWithdrawalBody,
+): Promise<WithdrawalResponse['withdrawal']> {
+  const res = await request<WithdrawalResponse>(`/admin/withdrawals/${id}`, {
+    method: 'PATCH',
+    body,
+  });
+  return res.withdrawal;
 }

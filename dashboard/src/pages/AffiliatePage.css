@@ -1,0 +1,37 @@
+.aff-name {
+  font-weight: 600;
+}
+.aff-bank {
+  font-weight: 500;
+}
+.aff-sub {
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+/* Row "edit" button. */
+.btn.aff-edit {
+  padding: 6px 14px;
+  font-size: 13px;
+  background: var(--brand-soft);
+  border-color: #c7d2fe;
+  color: var(--brand);
+}
+.btn.aff-edit:hover {
+  background: #dbeafe;
+}
+
+/* Green save button in the edit modal. */
+.btn.aff-save {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+.btn.aff-save:hover:not(:disabled) {
+  background: #15803d;
+  border-color: #15803d;
+}
+.btn.aff-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

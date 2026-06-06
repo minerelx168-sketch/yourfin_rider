@@ -24,6 +24,14 @@ const MapPage = lazy(() =>
 const FeedPage = lazy(() =>
   import('./pages/FeedPage').then((m) => ({ default: m.FeedPage })),
 );
+const WithdrawalsPage = lazy(() =>
+  import('./pages/WithdrawalsPage').then((m) => ({
+    default: m.WithdrawalsPage,
+  })),
+);
+const AffiliatePage = lazy(() =>
+  import('./pages/AffiliatePage').then((m) => ({ default: m.AffiliatePage })),
+);
 
 /** Providers + chrome that wrap every authenticated dashboard page. */
 function DashboardShell() {
@@ -56,6 +64,8 @@ export default function App() {
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/map" element={<MapPage />} />
               <Route path="/feed" element={<FeedPage />} />
+              <Route path="/withdrawals" element={<WithdrawalsPage />} />
+              <Route path="/affiliate" element={<AffiliatePage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
