@@ -79,6 +79,13 @@ yourfin_rifder/
 - **Affiliate หลายชั้น:** ระบบไล่จ่ายค่าแนะนำขึ้นสายแนะนำ (สูงสุด 5 ชั้น) ให้คนที่แนะนำไรเดอร์เข้ามา
 - **กระเป๋าเงินไรเดอร์ (ในแอป):** ดูยอดถอนได้ / รายได้สะสม / ledger แล้วยื่น **คำขอถอน**
 - **หน้า Admin:** เห็นรายการคำขอถอน → อนุมัติ/ปฏิเสธ/จ่าย พร้อม **แนบรูปสลิป** + ตั้งค่าคอม/สายแนะนำของแต่ละคน
+- **บัญชีรับเงิน:** ไรเดอร์ตั้งบัญชีได้ **1 บัญชี** (ในแอป) — การถอนใช้บัญชีนั้นเสมอ (ต้องตั้งก่อนถอน)
+
+### 👤 การจัดการผู้ใช้ & สิทธิ์ (RBAC)
+
+- **4 สิทธิ์:** `SALES` (แอป) · `MANAGER` (dashboard การขาย+การเงิน) · `FINANCE` (เฉพาะงานถอน/สลิป) · `ADMIN` (ทั้งหมด)
+- **ออกบัญชีผู้ใช้:** `ADMIN` และ `MANAGER` สร้าง/แก้ไข/รีเซ็ตรหัสผู้ใช้แต่ละ role ได้ —
+  โดย `MANAGER` ทำได้ทุก role **ยกเว้น `ADMIN`** (มีเฉพาะ ADMIN ที่จัดการ ADMIN ได้)
 
 ---
 
@@ -125,8 +132,9 @@ npx expo start                  # สแกน QR ด้วย Expo Go (iOS/Andr
 
 | Role | email | password | ใช้กับ |
 |---|---|---|---|
-| ADMIN | `admin@yourfin.co` | `admin1234` | จัดการผู้ใช้ |
-| MANAGER | `manager@yourfin.co` | `manager1234` | **Dashboard** |
+| ADMIN | `admin@yourfin.co` | `admin1234` | จัดการผู้ใช้/ระบบทั้งหมด |
+| MANAGER | `manager@yourfin.co` | `manager1234` | **Dashboard** การขาย + ออกบัญชีผู้ใช้ |
+| FINANCE | `finance@yourfin.co` | `finance1234` | เฉพาะงานถอนเงิน/สลิป |
 | SALES | `somchai@yourfin.co` *(และ suda / anan / nong)* | `sales1234` | **Mobile app** |
 
 ---
