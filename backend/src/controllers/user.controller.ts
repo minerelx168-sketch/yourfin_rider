@@ -1,26 +1,60 @@
+import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import { z } from 'zod';
+import type { Role } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { ApiError, asyncHandler } from '../middleware/error';
 import { publicUserSelect } from './auth.controller';
+
+const ROLE_ENUM = z.enum(['SALES', 'MANAGER', 'FINANCE', 'ADMIN']);
+
+export const createUserSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6, 'รหัสผ่านอย่างน้อย 6 ตัวอักษร'),
+  name: z.string().min(1),
+  role: ROLE_ENUM.default('SALES'),
+  phone: z.string().optional(),
+  team: z.string().optional(),
+  region: z.string().optional(),
+  targetDailyClose: z.number().int().min(0).optional(),
+  commissionPerDeal: z.number().int().min(0).optional(),
+  referralPercent: z.number().min(0).max(100).optional(),
+  referredById: z.string().nullable().optional(),
+  bankName: z.string().max(100).optional(),
+  bankAccountNumber: z.string().max(40).optional(),
+  bankAccountName: z.string().max(120).optional(),
+});
 
 export const updateUserSchema = z.object({
   name: z.string().min(1).optional(),
   phone: z.string().optional(),
   team: z.string().optional(),
   region: z.string().optional(),
-  role: z.enum(['SALES', 'MANAGER', 'FINANCE', 'ADMIN']).optional(),
+  role: ROLE_ENUM.optional(),
   active: z.boolean().optional(),
   targetDailyClose: z.number().int().min(0).optional(),
-  // คอมมิชชั่น & affiliate
   commissionPerDeal: z.number().int().min(0).optional(),
   referralPercent: z.number().min(0).max(100).optional(),
   referredById: z.string().nullable().optional(),
-  // บัญชีรับเงิน
   bankName: z.string().max(100).optional(),
   bankAccountNumber: z.string().max(40).optional(),
   bankAccountName: z.string().max(120).optional(),
 });
+
+export const resetPasswordSchema = z.object({
+  password: z.string().min(6, 'รหัสผ่านอย่างน้อย 6 ตัวอักษร'),
+});
+
+/**
+ * ใครจัดการ role ปลายทางได้บ้าง:
+ * - ADMIN: ทุก role
+ * - MANAGER: ทุก role ยกเว้น ADMIN (กัน privilege escalation)
+ */
+function canManageRole(actor: Role, targetRole: Role): boolean {
+  if (actor === 'ADMIN') return true;
+  if (actor === 'MANAGER') return targetRole !== 'ADMIN';
+  return false;
+}
 
 /** ป้องกันสายแนะนำวน (cycle) ก่อนตั้ง referredById */
 async function wouldCreateCycle(userId: string, newReferrerId: string): Promise<boolean> {
@@ -47,13 +81,60 @@ export const listUsers = asyncHandler(async (_req: Request, res: Response) => {
   res.json({ users });
 });
 
+export const createUser = asyncHandler(async (req: Request, res: Response) => {
+  const body = req.body as z.infer<typeof createUserSchema>;
+  const actorRole = req.user!.role;
+
+  if (!canManageRole(actorRole, body.role)) {
+    throw new ApiError(403, 'ไม่มีสิทธิ์สร้างผู้ใช้ระดับนี้');
+  }
+  if (body.referredById) {
+    const ref = await prisma.user.findUnique({
+      where: { id: body.referredById },
+      select: { id: true },
+    });
+    if (!ref) throw new ApiError(400, 'ไม่พบผู้แนะนำ (referredById) ที่ระบุ');
+  }
+
+  const passwordHash = await bcrypt.hash(body.password, 10);
+  const user = await prisma.user.create({
+    data: {
+      email: body.email,
+      passwordHash,
+      name: body.name,
+      role: body.role,
+      phone: body.phone,
+      team: body.team,
+      region: body.region,
+      targetDailyClose: body.targetDailyClose ?? 3,
+      commissionPerDeal: body.commissionPerDeal ?? 0,
+      referralPercent: body.referralPercent ?? 0,
+      referredById: body.referredById ?? null,
+      bankName: body.bankName,
+      bankAccountNumber: body.bankAccountNumber,
+      bankAccountName: body.bankAccountName,
+    },
+    select: publicUserSelect,
+  });
+  res.status(201).json({ user });
+});
+
 export const updateUser = asyncHandler(async (req: Request, res: Response) => {
   const body = req.body as z.infer<typeof updateUserSchema>;
   const id = req.params.id;
+  const actorRole = req.user!.role;
+
   const existing = await prisma.user.findUnique({ where: { id } });
   if (!existing) throw new ApiError(404, 'User not found');
 
-  // ทำให้ค่าว่างของ referredById เป็น null และตรวจ cycle
+  // MANAGER แตะผู้ใช้ระดับ ADMIN ไม่ได้ และตั้ง role เป็น ADMIN ไม่ได้
+  if (!canManageRole(actorRole, existing.role)) {
+    throw new ApiError(403, 'ไม่มีสิทธิ์แก้ไขผู้ใช้ระดับนี้');
+  }
+  if (body.role && !canManageRole(actorRole, body.role)) {
+    throw new ApiError(403, 'ไม่มีสิทธิ์ตั้ง role ระดับนี้');
+  }
+
   const data: typeof body = { ...body };
   if (body.referredById !== undefined) {
     const ref = body.referredById ? body.referredById : null;
@@ -67,10 +148,19 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
     data.referredById = ref;
   }
 
-  const user = await prisma.user.update({
-    where: { id },
-    data,
-    select: publicUserSelect,
-  });
+  const user = await prisma.user.update({ where: { id }, data, select: publicUserSelect });
   res.json({ user });
+});
+
+export const resetPassword = asyncHandler(async (req: Request, res: Response) => {
+  const { password } = req.body as z.infer<typeof resetPasswordSchema>;
+  const id = req.params.id;
+  const existing = await prisma.user.findUnique({ where: { id }, select: { id: true, role: true } });
+  if (!existing) throw new ApiError(404, 'User not found');
+  if (!canManageRole(req.user!.role, existing.role)) {
+    throw new ApiError(403, 'ไม่มีสิทธิ์รีเซ็ตรหัสผ่านของผู้ใช้ระดับนี้');
+  }
+  const passwordHash = await bcrypt.hash(password, 10);
+  await prisma.user.update({ where: { id }, data: { passwordHash } });
+  res.json({ ok: true });
 });

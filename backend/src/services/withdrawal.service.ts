@@ -6,15 +6,23 @@ import { startOfMonthBangkok, startOfTodayBangkok } from '../utils/date';
 
 export interface CreateWithdrawalInput {
   amount: number;
-  bankName?: string;
-  bankAccountNumber?: string;
-  bankAccountName?: string;
   note?: string;
 }
 
-/** ไรเดอร์ยื่นคำขอถอน — ตรวจยอดคงเหลือก่อน แล้ว snapshot บัญชีรับเงิน */
+/**
+ * ไรเดอร์ยื่นคำขอถอน — ใช้บัญชีรับเงินบัญชีเดียวในโปรไฟล์เสมอ (ตั้งไว้ก่อน)
+ * ตรวจว่ามีบัญชีแล้ว + ยอดคงเหลือพอ แล้ว snapshot บัญชีลงคำขอ
+ */
 export async function createWithdrawal(userId: string, input: CreateWithdrawalInput) {
   if (input.amount <= 0) throw new ApiError(400, 'จำนวนเงินต้องมากกว่า 0');
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { bankName: true, bankAccountNumber: true, bankAccountName: true },
+  });
+  if (!user?.bankName || !user?.bankAccountNumber) {
+    throw new ApiError(400, 'กรุณาตั้งบัญชีรับเงินก่อนทำรายการถอน', { needBankAccount: true });
+  }
 
   const balance = await getBalance(userId);
   if (input.amount > balance.available) {
@@ -23,19 +31,14 @@ export async function createWithdrawal(userId: string, input: CreateWithdrawalIn
     });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { bankName: true, bankAccountNumber: true, bankAccountName: true },
-  });
-
   return prisma.withdrawal.create({
     data: {
       userId,
       amount: input.amount,
       status: 'PENDING',
-      bankName: input.bankName ?? user?.bankName ?? null,
-      bankAccountNumber: input.bankAccountNumber ?? user?.bankAccountNumber ?? null,
-      bankAccountName: input.bankAccountName ?? user?.bankAccountName ?? null,
+      bankName: user.bankName,
+      bankAccountNumber: user.bankAccountNumber,
+      bankAccountName: user.bankAccountName,
       note: input.note ?? null,
     },
   });

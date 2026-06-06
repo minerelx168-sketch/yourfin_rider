@@ -12,11 +12,10 @@ import {
 } from '../services/withdrawal.service';
 
 // ── ฝั่งไรเดอร์ ────────────────────────────────────────────────
+// บัญชีรับเงินถูกล็อกเป็นบัญชีเดียวในโปรไฟล์ (ตั้งผ่าน PATCH /wallet/bank)
+// คำขอถอนจึงรับแค่จำนวนเงิน + หมายเหตุ
 export const createWithdrawalSchema = z.object({
   amount: z.number().positive('จำนวนเงินต้องมากกว่า 0'),
-  bankName: z.string().max(100).optional(),
-  bankAccountNumber: z.string().max(40).optional(),
-  bankAccountName: z.string().max(120).optional(),
   note: z.string().max(500).optional(),
 });
 

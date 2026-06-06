@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { myWallet } from '../controllers/wallet.controller';
+import { myWallet, updateBankSchema, updateMyBank } from '../controllers/wallet.controller';
 import {
   createWithdrawalSchema,
   myWithdrawals,
@@ -11,8 +11,9 @@ import { validate } from '../middleware/validate';
 const router = Router();
 router.use(requireAuth);
 
-// กระเป๋าเงิน + คำขอถอนของไรเดอร์เอง
+// กระเป๋าเงิน + บัญชีรับเงิน + คำขอถอนของไรเดอร์เอง
 router.get('/', myWallet);
+router.patch('/bank', validate(updateBankSchema), updateMyBank);
 router.post('/withdrawals', validate(createWithdrawalSchema), requestWithdrawal);
 router.get('/withdrawals', myWithdrawals);
 

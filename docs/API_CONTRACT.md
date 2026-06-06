@@ -170,14 +170,22 @@ Response `201`: `{ "url": string, "filename": string, "size": number }`
 
 ---
 
-## Users  (ADMIN)
+## Users — จัดการผู้ใช้  (ADMIN / MANAGER)
+
+> **กฎสิทธิ์:** `MANAGER` สร้าง/แก้ไข/รีเซ็ตรหัส/ตั้ง role ได้ทุกระดับ **ยกเว้น `ADMIN`**
+> (สร้าง ADMIN, แก้ผู้ใช้ที่เป็น ADMIN, หรือเลื่อนใครเป็น ADMIN → ตอบ 403). มีเฉพาะ ADMIN ที่จัดการ ADMIN ได้
 
 - `GET /users` → `{ "users": User[] }`
+- `POST /users` (ออก/สร้างบัญชีผู้ใช้) →
+  `{ email, password, name, role?, phone?, team?, region?, targetDailyClose?,`
+  ` commissionPerDeal?, referralPercent?, referredById?, bankName?, bankAccountNumber?, bankAccountName? }`
+  → `201 { "user": User }`
 - `PATCH /users/:id` → ตั้งค่าทั่วไป + **คอม/affiliate**:
   `{ name?, phone?, team?, region?, role?, active?, targetDailyClose?,`
   ` commissionPerDeal?, referralPercent?, referredById?(string|null),`
   ` bankName?, bankAccountNumber?, bankAccountName? }` → `{ "user": User }`
   > ตั้ง `referredById` เพื่อผูกสายแนะนำ (affiliate). ระบบกันสายวน (ตอบ 400 ถ้าวน)
+- `POST /users/:id/reset-password` (ออกรหัสผ่านใหม่) → `{ password }` → `{ "ok": true }`
 
 ---
 
@@ -199,10 +207,16 @@ Response `201`: `{ "url": string, "filename": string, "size": number }`
   "sourceActivityId":"...","sourceUserId":"...","note":null,"createdAt":"ISO" }
 ```
 
+### `PATCH /wallet/bank`  (ตั้ง/แก้บัญชีรับเงินของตัวเอง — 1 ยูส = 1 บัญชี)
+Request: `{ "bankName": string, "bankAccountNumber": string, "bankAccountName": string }`
+Response `200`: `{ "bank": { bankName, bankAccountNumber, bankAccountName } }`
+> มีได้บัญชีเดียว (ทับของเดิม). บัญชีนี้คือบัญชีที่ใช้รับเงินถอนเสมอ
+
 ### `POST /wallet/withdrawals`
-Request: `{ "amount": number, "bankName"?, "bankAccountNumber"?, "bankAccountName"?, "note"? }`
+Request: `{ "amount": number, "note"? }`  *(ไม่รับเลขบัญชี — ใช้บัญชีที่ตั้งไว้ในโปรไฟล์เสมอ)*
+- ถ้ายังไม่ตั้งบัญชีรับเงิน → `400` `{ error, details:{ needBankAccount:true } }`
 - ตรวจ `amount` ≤ `available` (ไม่พอ → 400 พร้อม `details.available`)
-Response `201`: `{ "withdrawal": Withdrawal }`
+Response `201`: `{ "withdrawal": Withdrawal }` (snapshot บัญชีจากโปรไฟล์)
 
 ### `GET /wallet/withdrawals`
 Response: `{ "withdrawals": Withdrawal[] }`  (ของฉัน เรียงล่าสุดก่อน)
