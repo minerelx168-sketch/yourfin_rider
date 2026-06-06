@@ -13,7 +13,7 @@ REST API ของระบบ ใช้ร่วมกันทั้ง **mobi
 
 | Enum | ค่า |
 |---|---|
-| `Role` | `SALES`, `MANAGER`, `ADMIN` |
+| `Role` | `SALES`, `MANAGER`, `FINANCE`, `ADMIN` |
 | `EventType` | `CLOCK_IN`, `CHECK_IN`, `CLOCK_OUT` |
 | `Brand` | `SAMSUNG`, `VIVO`, `OPPO`, `XIAOMI`, `REALME`, `APPLE`, `OTHER` |
 | `VisitStatus` | `SUCCESS`, `PENDING`, `REJECTED` |
@@ -218,7 +218,27 @@ Response: `{ "withdrawals": Withdrawal[] }`  (ของฉัน เรียง
 
 ---
 
-## Admin — Withdrawals  (ADMIN / MANAGER)
+## Admin — Withdrawals & Finance  (ADMIN / MANAGER / FINANCE)
+
+> **role `FINANCE` (ผู้จัดการฝ่ายการเงิน):** เข้าถึงได้เฉพาะ endpoint ใต้หัวข้อนี้ +
+> `POST /uploads` (สลิป) เท่านั้น — ถูกบล็อก (403) จาก `/dashboard/*`, `/users`, ตั้งค่า affiliate
+
+### `GET /admin/finance/summary`
+ภาพรวมการเงินสำหรับ FINANCE dashboard
+```jsonc
+{
+  "pending":  { "count":2, "amount":550 },
+  "approved": { "count":1, "amount":400 },
+  "paid":     { "count":2, "amount":1100 },
+  "rejected": { "count":1, "amount":150 },
+  "paidToday":     { "count":1, "amount":600 },
+  "paidThisMonth": { "count":1, "amount":600 },
+  "recentPayouts": [
+    { "id":"...","riderName":"สมชาย ใจดี","region":"...","amount":600,
+      "bankName":"กสิกรไทย","slipUrl":"https://...","processedAt":"ISO" }
+  ]
+}
+```
 
 ### `GET /admin/withdrawals?status=&from=YYYY-MM-DD&to=YYYY-MM-DD`
 ```jsonc

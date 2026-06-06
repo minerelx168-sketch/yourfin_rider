@@ -4,6 +4,7 @@ import { asyncHandler } from '../middleware/error';
 import { parseWorkDate } from '../utils/date';
 import {
   createWithdrawal,
+  financeSummary,
   getMyWithdrawals,
   listWithdrawals,
   processWithdrawal,
@@ -61,4 +62,9 @@ export const adminProcessWithdrawal = asyncHandler(async (req: Request, res: Res
     adminNote,
   });
   res.json({ withdrawal });
+});
+
+// ภาพรวมการเงิน (สำหรับ role FINANCE / ADMIN / MANAGER)
+export const adminFinanceSummary = asyncHandler(async (_req: Request, res: Response) => {
+  res.json(await financeSummary());
 });

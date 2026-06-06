@@ -2,6 +2,7 @@ import type { Prisma, WithdrawalStatus } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { ApiError } from '../middleware/error';
 import { getBalance } from './commission.service';
+import { startOfMonthBangkok, startOfTodayBangkok } from '../utils/date';
 
 export interface CreateWithdrawalInput {
   amount: number;
@@ -84,6 +85,56 @@ export async function withdrawalSummary() {
       count: get('REJECTED')?._count._all ?? 0,
       amount: get('REJECTED')?._sum.amount ?? 0,
     },
+  };
+}
+
+/** สรุปสำหรับหน้า "ภาพรวมการเงิน" ของผู้จัดการฝ่ายการเงิน */
+export async function financeSummary() {
+  const todayStart = startOfTodayBangkok();
+  const monthStart = startOfMonthBangkok();
+
+  const [byStatus, paidToday, paidMonth, recentPayouts] = await Promise.all([
+    prisma.withdrawal.groupBy({ by: ['status'], _sum: { amount: true }, _count: { _all: true } }),
+    prisma.withdrawal.aggregate({
+      where: { status: 'PAID', processedAt: { gte: todayStart } },
+      _sum: { amount: true },
+      _count: { _all: true },
+    }),
+    prisma.withdrawal.aggregate({
+      where: { status: 'PAID', processedAt: { gte: monthStart } },
+      _sum: { amount: true },
+      _count: { _all: true },
+    }),
+    prisma.withdrawal.findMany({
+      where: { status: 'PAID' },
+      orderBy: { processedAt: 'desc' },
+      take: 8,
+      include: { user: { select: { name: true, region: true } } },
+    }),
+  ]);
+
+  const get = (s: WithdrawalStatus) => byStatus.find((g) => g.status === s);
+  const box = (s: WithdrawalStatus) => ({
+    count: get(s)?._count._all ?? 0,
+    amount: get(s)?._sum.amount ?? 0,
+  });
+
+  return {
+    pending: box('PENDING'),
+    approved: box('APPROVED'),
+    paid: box('PAID'),
+    rejected: box('REJECTED'),
+    paidToday: { count: paidToday._count._all, amount: paidToday._sum.amount ?? 0 },
+    paidThisMonth: { count: paidMonth._count._all, amount: paidMonth._sum.amount ?? 0 },
+    recentPayouts: recentPayouts.map((w) => ({
+      id: w.id,
+      riderName: w.user.name,
+      region: w.user.region,
+      amount: w.amount,
+      bankName: w.bankName,
+      slipUrl: w.slipUrl,
+      processedAt: w.processedAt,
+    })),
   };
 }
 

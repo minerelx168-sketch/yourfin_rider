@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+  adminFinanceSummary,
   adminListWithdrawals,
   adminProcessWithdrawal,
   listWithdrawalsSchema,
@@ -10,9 +11,10 @@ import { validate } from '../middleware/validate';
 
 const router = Router();
 
-// จัดการคำขอถอนคอมมิชชั่น — เห็น/ดำเนินการโดย ADMIN หรือ MANAGER
-router.use(requireAuth, requireRole('ADMIN', 'MANAGER'));
+// งานถอนคอมมิชชั่น/การเงิน — เห็น/ดำเนินการโดย ADMIN, MANAGER หรือ FINANCE
+router.use(requireAuth, requireRole('ADMIN', 'MANAGER', 'FINANCE'));
 
+router.get('/finance/summary', adminFinanceSummary);
 router.get('/withdrawals', validate(listWithdrawalsSchema, 'query'), adminListWithdrawals);
 router.patch('/withdrawals/:id', validate(processWithdrawalSchema), adminProcessWithdrawal);
 

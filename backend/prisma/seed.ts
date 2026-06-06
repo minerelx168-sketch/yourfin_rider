@@ -85,7 +85,9 @@ async function accrueSeed(
 async function main() {
   console.log('🌱 Seeding YourFin Rider database...');
 
-  // เคลียร์ข้อมูลเดิม (ลำดับสำคัญเพราะ FK)
+  // เคลียร์ข้อมูลเดิม (ลำดับสำคัญเพราะ FK: ลบลูกก่อนพ่อแม่)
+  await prisma.withdrawal.deleteMany();
+  await prisma.commissionEntry.deleteMany();
   await prisma.activity.deleteMany();
   await prisma.store.deleteMany();
   await prisma.user.deleteMany();
@@ -113,6 +115,16 @@ async function main() {
       role: 'MANAGER',
       region: 'กรุงเทพฯ',
       team: 'Sales',
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      email: 'finance@yourfin.co',
+      passwordHash: await bcrypt.hash('finance1234', 10),
+      name: 'การเงิน ฝ่ายบัญชี',
+      role: 'FINANCE',
+      team: 'Finance',
     },
   });
 
@@ -285,11 +297,12 @@ async function main() {
 
   const commissionTotal = await prisma.commissionEntry.aggregate({ _sum: { amount: true }, _count: { _all: true } });
 
-  console.log(`✅ Done. Users: ${sales.length + 2}, Stores: ${storeSeeds.length}, Activities: ${activityCount}`);
+  console.log(`✅ Done. Users: ${sales.length + 3}, Stores: ${storeSeeds.length}, Activities: ${activityCount}`);
   console.log(`   Commission entries: ${commissionTotal._count._all} (รวม ${commissionTotal._sum.amount ?? 0} บาท), Withdrawals: ${wdCount}`);
   console.log('\n🔑 Login accounts (password):');
-  console.log('   admin@yourfin.co / admin1234     (ADMIN — ดูคำขอถอน/ตั้งค่า affiliate)');
-  console.log('   manager@yourfin.co / manager1234 (MANAGER — dashboard)');
+  console.log('   admin@yourfin.co / admin1234     (ADMIN — ทุกอย่าง)');
+  console.log('   manager@yourfin.co / manager1234 (MANAGER — dashboard การขาย)');
+  console.log('   finance@yourfin.co / finance1234 (FINANCE — งานถอนเงิน/สลิป)');
   console.log('   somchai@yourfin.co / sales1234   (SALES — แอป + กระเป๋าเงิน/ถอนคอม)');
 }
 

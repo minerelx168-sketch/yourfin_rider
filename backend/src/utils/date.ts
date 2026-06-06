@@ -26,6 +26,18 @@ export function formatWorkDate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+/** instant จริงของ "เที่ยงคืนวันนี้ เวลากรุงเทพ" (ใช้กรองตาม processedAt) */
+export function startOfTodayBangkok(at: Date = new Date()): Date {
+  const b = new Date(at.getTime() + BANGKOK_OFFSET_MS);
+  return new Date(Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate()) - BANGKOK_OFFSET_MS);
+}
+
+/** instant จริงของ "วันที่ 1 ของเดือนนี้ 00:00 เวลากรุงเทพ" */
+export function startOfMonthBangkok(at: Date = new Date()): Date {
+  const b = new Date(at.getTime() + BANGKOK_OFFSET_MS);
+  return new Date(Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), 1) - BANGKOK_OFFSET_MS);
+}
+
 /** จุดเริ่มต้นของช่วง: ถ้าไม่ระบุ ใช้ค่าเริ่มต้น N วันย้อนหลังจากวันนี้ */
 export function rangeFromQuery(
   from?: string,

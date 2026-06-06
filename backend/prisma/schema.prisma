@@ -15,6 +15,7 @@ datasource db {
 enum Role {
   SALES // เซลล์ไรเดอร์ภาคสนาม
   MANAGER // หัวหน้าทีม — เห็น dashboard
+  FINANCE // ผู้จัดการฝ่ายการเงิน — เห็นเฉพาะงานถอนเงิน/สลิป
   ADMIN // ผู้ดูแลระบบ
 }
 

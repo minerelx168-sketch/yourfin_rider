@@ -38,7 +38,7 @@ export const registerSchema = z.object({
   phone: z.string().optional(),
   team: z.string().optional(),
   region: z.string().optional(),
-  role: z.enum(['SALES', 'MANAGER', 'ADMIN']).default('SALES'),
+  role: z.enum(['SALES', 'MANAGER', 'FINANCE', 'ADMIN']).default('SALES'),
   targetDailyClose: z.number().int().min(0).optional(),
 });
 

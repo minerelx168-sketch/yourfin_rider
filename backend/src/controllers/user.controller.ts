@@ -9,7 +9,7 @@ export const updateUserSchema = z.object({
   phone: z.string().optional(),
   team: z.string().optional(),
   region: z.string().optional(),
-  role: z.enum(['SALES', 'MANAGER', 'ADMIN']).optional(),
+  role: z.enum(['SALES', 'MANAGER', 'FINANCE', 'ADMIN']).optional(),
   active: z.boolean().optional(),
   targetDailyClose: z.number().int().min(0).optional(),
   // คอมมิชชั่น & affiliate
