@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<title>YourFin Rider — Commission & Withdrawal Mockup</title>
+<style>
+  :root{
+    --primary:#4f46e5;--primary-dark:#4338ca;--primary-light:#eef2ff;
+    --bg:#f5f6fa;--surface:#fff;--text:#111827;--muted:#6b7280;--border:#e5e7eb;
+    --success:#16a34a;--pending:#f59e0b;--rejected:#dc2626;--info:#4f46e5;
+    --success-bg:#dcfce7;--pending-bg:#fef3c7;--rejected-bg:#fee2e2;--info-bg:#eef2ff;
+    --success-tx:#15803d;--pending-tx:#b45309;--rejected-tx:#b91c1c;--info-tx:#4338ca;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Loma','Noto Sans Thai','Sarabun',-apple-system,'Segoe UI',sans-serif;
+    background:linear-gradient(160deg,#eef2ff,#f5f6fa 45%,#e9ecf5);color:var(--text);padding:46px 24px 80px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1200px;margin:0 auto}
+  .page-head{text-align:center;margin-bottom:6px}
+  .page-head h1{font-size:32px;letter-spacing:-.5px}
+  .page-head .accent{color:var(--primary)}
+  .page-head p{color:var(--muted);margin-top:8px;font-size:15px}
+  .section-title{display:flex;align-items:center;gap:12px;margin:52px 0 26px;font-size:20px;font-weight:700}
+  .section-title .num{background:var(--primary);color:#fff;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:15px}
+  .section-title small{color:var(--muted);font-weight:400;font-size:14px}
+
+  /* browser frame */
+  .browser{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 26px 60px -18px rgba(31,41,55,.5);border:1px solid var(--border);position:relative}
+  .chrome{background:#e9edf3;padding:11px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+  .chrome .d{width:12px;height:12px;border-radius:50%}
+  .chrome .url{margin-left:12px;background:#fff;border-radius:7px;padding:5px 12px;font-size:12px;color:var(--muted);flex:1;max-width:360px}
+  .dash{display:flex;min-height:540px}
+  .side{width:208px;background:#1e1b4b;color:#c7d2fe;padding:18px 14px;flex-shrink:0}
+  .side .brand{color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;gap:9px;margin-bottom:20px}
+  .side .logo{width:30px;height:30px;border-radius:9px;background:var(--primary);display:grid;place-items:center}
+  .nav{display:flex;flex-direction:column;gap:4px}
+  .nav a{padding:9px 12px;border-radius:9px;font-size:13px;display:flex;align-items:center;gap:10px;color:#c7d2fe}
+  .nav a.on{background:var(--primary);color:#fff;font-weight:700}
+  .nav a svg{width:17px;height:17px;flex-shrink:0}
+  .main{flex:1;background:var(--bg);display:flex;flex-direction:column;min-width:0}
+  .topbar{background:#fff;border-bottom:1px solid var(--border);padding:13px 22px;display:flex;align-items:center;justify-content:space-between}
+  .topbar .h{font-size:17px;font-weight:700}
+  .topbar .r{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--muted)}
+  .avatar-sm{width:30px;height:30px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:grid;place-items:center;font-weight:700;font-size:13px}
+  .content{padding:20px 22px}
+
+  .scards{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px}
+  .scard{background:#fff;border:1px solid var(--border);border-radius:13px;padding:13px 15px;position:relative;overflow:hidden}
+  .scard .l{font-size:12px;color:var(--muted)}
+  .scard .v{font-size:23px;font-weight:800;margin-top:4px;line-height:1.1}
+  .scard .c{font-size:11px;color:var(--muted);margin-top:3px}
+  .scard .stripe{position:absolute;left:0;top:0;bottom:0;width:4px}
+
+  .toolbar{display:flex;gap:8px;margin-bottom:14px}
+  .fchip{padding:7px 14px;border-radius:9px;font-size:12.5px;font-weight:600;border:1px solid var(--border);background:#fff;color:var(--muted)}
+  .fchip.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+  .panel{background:#fff;border:1px solid var(--border);border-radius:13px;overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;padding:11px 14px;border-bottom:1px solid var(--border);background:#fafbfc}
+  td{padding:12px 14px;border-bottom:1px solid #f1f2f6;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  .who{font-weight:700}.sub{font-size:11px;color:var(--muted);margin-top:1px}
+  .amt{font-weight:800}
+  .mono{font-variant-numeric:tabular-nums}
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+  .badge.success{background:var(--success-bg);color:var(--success-tx)}
+  .badge.pending{background:var(--pending-bg);color:var(--pending-tx)}
+  .badge.rejected{background:var(--rejected-bg);color:var(--rejected-tx)}
+  .badge.info{background:var(--info-bg);color:var(--info-tx)}
+  .acts{display:flex;gap:6px}
+  .btn{padding:6px 11px;border-radius:8px;font-size:11.5px;font-weight:700;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+  .btn.green{background:var(--success);color:#fff}
+  .btn.ghost{background:#fff;border-color:var(--border);color:var(--muted)}
+  .btn.red{background:#fff;border-color:var(--rejected);color:var(--rejected)}
+  .btn.idg{background:var(--primary);color:#fff}
+  .sliplink{color:var(--primary);font-weight:700;font-size:11.5px;display:inline-flex;align-items:center;gap:4px}
+  .slipthumb{width:30px;height:40px;border-radius:5px;background:linear-gradient(135deg,#16a34a,#15803d);display:grid;place-items:center;color:#fff;font-size:8px;font-weight:700}
+  .edit-ic{display:inline-flex;gap:10px}
+  .edit-ic svg{width:17px;height:17px;cursor:pointer}
+
+  /* modal overlay */
+  .overlay{position:absolute;inset:0;background:rgba(17,24,39,.45);display:flex;align-items:center;justify-content:center;z-index:40}
+  .modal{background:#fff;width:340px;border-radius:16px;padding:20px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+  .modal h3{font-size:16px;margin-bottom:4px}
+  .modal .ms{font-size:12px;color:var(--muted);margin-bottom:14px}
+  .lbl{font-size:12px;color:var(--muted);margin:12px 2px 6px;font-weight:600;display:block}
+  .input{width:100%;background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13.5px}
+  .input.ph{color:#9ca3af}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .dz{border:1.5px dashed #c7cdd6;border-radius:12px;padding:16px;text-align:center;color:var(--muted);font-size:12px;background:#fafbfc}
+  .dz .slip{width:70px;height:94px;margin:0 auto 8px;border-radius:8px;background:linear-gradient(135deg,#16a34a,#15803d);display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700;position:relative}
+  .dz .slip::after{content:'✓';position:absolute;right:-6px;top:-6px;width:20px;height:20px;border-radius:50%;background:#fff;color:#16a34a;display:grid;place-items:center;font-size:12px;border:2px solid #16a34a}
+  .modal-actions{display:flex;gap:10px;margin-top:18px}
+  .modal-actions .btn{flex:1;padding:11px;text-align:center}
+
+  /* phone */
+  .phone-row{display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;justify-content:center}
+  .phone{width:300px;height:632px;background:#000;border-radius:42px;padding:11px;box-shadow:0 22px 50px -12px rgba(31,41,55,.45),0 0 0 2px #1f2937;position:relative;flex-shrink:0}
+  .screen{width:100%;height:100%;background:var(--bg);border-radius:32px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+  .notch{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:104px;height:25px;background:#000;border-radius:0 0 16px 16px;z-index:30}
+  .sb{height:38px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 22px 5px;font-size:12px;font-weight:600;color:#fff;z-index:5}
+  .hero{background:linear-gradient(135deg,#4f46e5,#4338ca);color:#fff;padding:4px 18px 20px}
+  .hero .t{font-size:13px;opacity:.85}
+  .hero .big{font-size:38px;font-weight:800;margin-top:2px;letter-spacing:-1px}
+  .hero .big small{font-size:16px;font-weight:600;opacity:.9}
+  .hero .wbtn{margin-top:14px;background:#fff;color:var(--primary);border-radius:12px;padding:12px;text-align:center;font-weight:800;font-size:14px}
+  .pbody{flex:1;padding:14px;overflow:hidden}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:-34px;position:relative;z-index:2}
+  .mini{background:#fff;border:1px solid var(--border);border-radius:12px;padding:9px 8px;text-align:center;box-shadow:0 4px 10px rgba(0,0,0,.04)}
+  .mini .ml{font-size:9.5px;color:var(--muted)}
+  .mini .mv{font-size:15px;font-weight:800;margin-top:2px}
+  .card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-top:12px}
+  .ct{font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text)}
+  .kv{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12.5px;border-bottom:1px solid #f4f5f8}
+  .kv:last-child{border-bottom:none}
+  .kv .k{color:var(--muted)}.kv .v{font-weight:700}
+  .wrow{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f4f5f8}
+  .wrow:last-child{border-bottom:none}
+  .wrow .wl .a{font-weight:800;font-size:13.5px}.wrow .wl .d{font-size:10.5px;color:var(--muted);margin-top:1px}
+  .led{display:flex;align-items:center;justify-content:space-between;padding:7px 0;font-size:12px;border-bottom:1px solid #f4f5f8}
+  .led:last-child{border-bottom:none}
+  .led .lt{color:var(--text)}.led .ld{font-size:10px;color:var(--muted)}
+  .led .lp{color:var(--success);font-weight:800}
+  .tabbar{height:58px;background:#fff;border-top:1px solid var(--border);display:flex;padding-bottom:5px}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:9.5px;color:var(--muted);font-weight:600}
+  .tab.on{color:var(--primary)}.tab svg{width:21px;height:21px}
+  .cap{text-align:center;margin-top:14px;font-weight:600;font-size:14px}.cap span{display:block;color:var(--muted);font-weight:400;font-size:12px;margin-top:2px}
+  .legend-note{font-size:12.5px;color:var(--muted);text-align:center;margin-top:54px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="page-head">
+    <h1><span class="accent">YourFin</span> Rider — คอมมิชชั่น · Affiliate · ถอนเงิน</h1>
+    <p>ฟีเจอร์ใหม่: ไรเดอร์ดูกระเป๋าเงิน/ขอถอน · แอดมินจัดการคำขอถอน+แนบสลิป · ตั้งค่าคอม &amp; สายแนะนำหลายชั้น</p>
+  </div>
+
+  <!-- 1. ADMIN — WITHDRAWALS -->
+  <div class="section-title"><span class="num">1</span> Admin · รายการถอนคอมมิชชั่น <small>อนุมัติ / ปฏิเสธ / จ่าย + แนบสลิป</small></div>
+  <div class="browser">
+    <div class="chrome"><span class="d" style="background:#ff5f57"></span><span class="d" style="background:#febc2e"></span><span class="d" style="background:#28c840"></span><span class="url">dashboard.yourfin.co/withdrawals</span></div>
+    <div class="dash">
+      <div class="side">
+        <div class="brand"><span class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 17l3-8 4 5 3-7 4 10" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>YourFin Rider</div>
+        <div class="nav">
+          <a><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="12" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="16" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="2"/></svg>ภาพรวม</a>
+          <a><svg viewBox="0 0 24 24" fill="none"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>จัดอันดับเซลล์</a>
+          <a><svg viewBox="0 0 24 24" fill="none"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>แผนที่ Coverage</a>
+          <a class="on"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M2 10h20" stroke="currentColor" stroke-width="2"/></svg>ถอนคอมมิชชั่น</a>
+          <a><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="2"/><path d="M5 20a7 7 0 0114 0" stroke="currentColor" stroke-width="2"/><path d="M18 7l2-2M18 7l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>ตั้งค่าคอม/Affiliate</a>
+        </div>
+      </div>
+      <div class="main">
+        <div class="topbar"><div class="h">รายการถอนคอมมิชชั่น</div><div class="r"><span>แอดมิน ระบบ</span><span class="avatar-sm">แ</span></div></div>
+        <div class="content">
+          <div class="scards">
+            <div class="scard"><span class="stripe" style="background:var(--pending)"></span><div class="l">รออนุมัติ</div><div class="v">2 <span style="font-size:14px;color:var(--muted)">รายการ</span></div><div class="c">฿550</div></div>
+            <div class="scard"><span class="stripe" style="background:var(--info)"></span><div class="l">อนุมัติแล้ว</div><div class="v">1 <span style="font-size:14px;color:var(--muted)">รายการ</span></div><div class="c">฿400</div></div>
+            <div class="scard"><span class="stripe" style="background:var(--success)"></span><div class="l">จ่ายแล้ว</div><div class="v">2 <span style="font-size:14px;color:var(--muted)">รายการ</span></div><div class="c">฿1,100</div></div>
+            <div class="scard"><span class="stripe" style="background:var(--rejected)"></span><div class="l">ปฏิเสธ</div><div class="v">1 <span style="font-size:14px;color:var(--muted)">รายการ</span></div><div class="c">฿150</div></div>
+          </div>
+          <div class="toolbar"><span class="fchip on">ทั้งหมด</span><span class="fchip">รออนุมัติ</span><span class="fchip">อนุมัติแล้ว</span><span class="fchip">จ่ายแล้ว</span><span class="fchip">ปฏิเสธ</span></div>
+          <div class="panel">
+            <table>
+              <tr><th>ผู้ขอถอน</th><th>จำนวนเงิน</th><th>ธนาคาร / บัญชี</th><th>สถานะ</th><th>วันที่ขอ</th><th>สลิป</th><th>จัดการ</th></tr>
+              <tr><td><div class="who">สมชาย ใจดี</div><div class="sub">กรุงเทพฯ ตะวันออก</div></td><td class="amt mono">฿300</td><td>กสิกรไทย<div class="sub mono">123-4-56789-0</div></td><td><span class="badge pending">รออนุมัติ</span></td><td class="mono">06/06/26</td><td><span class="sub">—</span></td><td><div class="acts"><span class="btn green">อนุมัติ</span><span class="btn red">ปฏิเสธ</span></div></td></tr>
+              <tr><td><div class="who">อนันต์ ขยันขาย</div><div class="sub">กรุงเทพฯ ใต้</div></td><td class="amt mono">฿250</td><td>กรุงเทพ<div class="sub mono">789-0-12345-6</div></td><td><span class="badge pending">รออนุมัติ</span></td><td class="mono">06/06/26</td><td><span class="sub">—</span></td><td><div class="acts"><span class="btn green">อนุมัติ</span><span class="btn red">ปฏิเสธ</span></div></td></tr>
+              <tr><td><div class="who">สุดา รักงาน</div><div class="sub">กรุงเทพฯ เหนือ</div></td><td class="amt mono">฿400</td><td>ไทยพาณิชย์<div class="sub mono">456-7-89012-3</div></td><td><span class="badge info">อนุมัติแล้ว</span></td><td class="mono">05/06/26</td><td><span class="sub">—</span></td><td><div class="acts"><span class="btn idg">จ่ายเงิน</span></div></td></tr>
+              <tr><td><div class="who">สมชาย ใจดี</div><div class="sub">กรุงเทพฯ ตะวันออก</div></td><td class="amt mono">฿600</td><td>กสิกรไทย<div class="sub mono">123-4-56789-0</div></td><td><span class="badge success">จ่ายแล้ว</span></td><td class="mono">04/06/26</td><td><span class="sliplink"><span class="slipthumb">SLIP</span>ดูสลิป</span></td><td><span class="sub">โอนแล้ว</span></td></tr>
+              <tr><td><div class="who">น้อง พากเพียร</div><div class="sub">นนทบุรี</div></td><td class="amt mono">฿150</td><td>กรุงไทย<div class="sub mono">012-3-45678-9</div></td><td><span class="badge rejected">ปฏิเสธ</span></td><td class="mono">03/06/26</td><td><span class="sub">—</span></td><td><span class="sub">ยอดไม่ถึงเกณฑ์</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- pay modal overlay -->
+    <div class="overlay">
+      <div class="modal">
+        <h3>จ่ายเงิน — สุดา รักงาน</h3>
+        <div class="ms">฿400 · ไทยพาณิชย์ 456-7-89012-3</div>
+        <span class="lbl">แนบสลิปการโอน *</span>
+        <div class="dz"><div class="slip">SLIP</div>slip-transfer.jpg · อัปโหลดแล้ว</div>
+        <span class="lbl">หมายเหตุ (ถึงไรเดอร์)</span>
+        <div class="input ph">โอนเข้าบัญชีเรียบร้อย</div>
+        <div class="modal-actions"><span class="btn ghost">ยกเลิก</span><span class="btn green">ยืนยันจ่ายเงิน</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. ADMIN — AFFILIATE -->
+  <div class="section-title"><span class="num">2</span> Admin · ตั้งค่าคอม &amp; Affiliate <small>คอมต่อดีล · % ค่าแนะนำ · ผู้แนะนำ (สายหลายชั้น)</small></div>
+  <div class="browser">
+    <div class="chrome"><span class="d" style="background:#ff5f57"></span><span class="d" style="background:#febc2e"></span><span class="d" style="background:#28c840"></span><span class="url">dashboard.yourfin.co/affiliate</span></div>
+    <div class="dash">
+      <div class="side">
+        <div class="brand"><span class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 17l3-8 4 5 3-7 4 10" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>YourFin Rider</div>
+        <div class="nav">
+          <a><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="12" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="16" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="2"/></svg>ภาพรวม</a>
+          <a><svg viewBox="0 0 24 24" fill="none"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>จัดอันดับเซลล์</a>
+          <a><svg viewBox="0 0 24 24" fill="none"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>แผนที่ Coverage</a>
+          <a><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M2 10h20" stroke="currentColor" stroke-width="2"/></svg>ถอนคอมมิชชั่น</a>
+          <a class="on"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="2"/><path d="M5 20a7 7 0 0114 0" stroke="currentColor" stroke-width="2"/><path d="M18 7l2-2M18 7l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>ตั้งค่าคอม/Affiliate</a>
+        </div>
+      </div>
+      <div class="main">
+        <div class="topbar"><div class="h">ตั้งค่าคอมมิชชั่น &amp; สายแนะนำ</div><div class="r"><span>แอดมิน ระบบ</span><span class="avatar-sm">แ</span></div></div>
+        <div class="content">
+          <div class="panel">
+            <table>
+              <tr><th>ไรเดอร์</th><th>คอมต่อดีล</th><th>ค่าแนะนำ (%)</th><th>ผู้แนะนำ (upline)</th><th>ธนาคาร</th><th style="text-align:right">แก้ไข</th></tr>
+              <tr><td><div class="who">สมชาย ใจดี</div><div class="sub">กรุงเทพฯ ตะวันออก</div></td><td class="amt mono">฿250</td><td class="mono">0%</td><td><span class="sub">— หัวสาย —</span></td><td>กสิกรไทย</td><td style="text-align:right"><span class="edit-ic"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="#f59e0b" stroke-width="2" stroke-linejoin="round"/></svg></span></td></tr>
+              <tr><td><div class="who">สุดา รักงาน</div><div class="sub">กรุงเทพฯ เหนือ</div></td><td class="amt mono">฿200</td><td class="mono">5%</td><td>สมชาย ใจดี</td><td>ไทยพาณิชย์</td><td style="text-align:right"><span class="edit-ic"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="#f59e0b" stroke-width="2" stroke-linejoin="round"/></svg></span></td></tr>
+              <tr><td><div class="who">อนันต์ ขยันขาย</div><div class="sub">กรุงเทพฯ ใต้</div></td><td class="amt mono">฿200</td><td class="mono">5%</td><td>สุดา รักงาน <span class="badge info" style="font-size:9px;padding:1px 7px">ชั้น 2 → สมชาย</span></td><td>กรุงเทพ</td><td style="text-align:right"><span class="edit-ic"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="#f59e0b" stroke-width="2" stroke-linejoin="round"/></svg></span></td></tr>
+              <tr><td><div class="who">น้อง พากเพียร</div><div class="sub">นนทบุรี</div></td><td class="amt mono">฿180</td><td class="mono">4%</td><td>สมชาย ใจดี</td><td>กรุงไทย</td><td style="text-align:right"><span class="edit-ic"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="#f59e0b" stroke-width="2" stroke-linejoin="round"/></svg></span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- edit modal -->
+    <div class="overlay">
+      <div class="modal">
+        <h3>แก้ไข — อนันต์ ขยันขาย</h3>
+        <div class="ms">ตั้งค่าคอมมิชชั่นและสายแนะนำ</div>
+        <div class="grid2">
+          <div><span class="lbl">คอมต่อดีล (บาท)</span><div class="input">200</div></div>
+          <div><span class="lbl">ค่าแนะนำ (%)</span><div class="input">5</div></div>
+        </div>
+        <span class="lbl">ผู้แนะนำ (upline)</span>
+        <div class="input">สุดา รักงาน ▾</div>
+        <div class="grid2">
+          <div><span class="lbl">ธนาคาร</span><div class="input">กรุงเทพ</div></div>
+          <div><span class="lbl">เลขบัญชี</span><div class="input">789-0-12345-6</div></div>
+        </div>
+        <div class="modal-actions"><span class="btn ghost">ยกเลิก</span><span class="btn green">บันทึก</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. MOBILE WALLET -->
+  <div class="section-title"><span class="num">3</span> Mobile · กระเป๋าเงินไรเดอร์ <small>ยอดถอนได้ · รายได้ · ขอถอน · ประวัติ</small></div>
+  <div class="phone-row">
+    <div>
+      <div class="phone"><div class="notch"></div><div class="screen">
+        <div class="sb"><span>09:41</span><span>
+          <svg width="17" height="11" viewBox="0 0 17 11" style="vertical-align:middle"><rect x="0" y="6" width="3" height="5" rx="1" fill="#fff"/><rect x="4" y="4" width="3" height="7" rx="1" fill="#fff"/><rect x="8" y="2" width="3" height="9" rx="1" fill="#fff"/><rect x="12" y="0" width="3" height="11" rx="1" fill="#fff"/></svg>
+        </span></div>
+        <div class="hero">
+          <div class="t">ยอดถอนได้</div>
+          <div class="big">฿7,028<small>.40</small></div>
+          <div class="wbtn">＋ ขอถอนเงิน</div>
+        </div>
+        <div class="pbody">
+          <div class="row3">
+            <div class="mini"><div class="ml">รายได้สะสม</div><div class="mv">฿7,928</div></div>
+            <div class="mini"><div class="ml">รออนุมัติ</div><div class="mv" style="color:var(--pending)">฿300</div></div>
+            <div class="mini"><div class="ml">จ่ายแล้ว</div><div class="mv" style="color:var(--success)">฿600</div></div>
+          </div>
+          <div class="card">
+            <div class="ct">รายได้ของฉัน</div>
+            <div class="kv"><span class="k">คอมจากการปิดดีล</span><span class="v">฿7,250</span></div>
+            <div class="kv"><span class="k">ค่าแนะนำ / Affiliate</span><span class="v" style="color:var(--primary)">฿678</span></div>
+            <div class="kv"><span class="k">ลูกทีมที่แนะนำ</span><span class="v">2 คน</span></div>
+            <div class="kv"><span class="k">คอมต่อดีล</span><span class="v">฿250</span></div>
+            <div class="kv"><span class="k">บัญชีรับโอน</span><span class="v">กสิกรไทย ••6789</span></div>
+          </div>
+          <div class="card">
+            <div class="ct">ประวัติการถอน</div>
+            <div class="wrow"><div class="wl"><div class="a">฿300</div><div class="d">06/06/26</div></div><span class="badge pending">รออนุมัติ</span></div>
+            <div class="wrow"><div class="wl"><div class="a">฿600</div><div class="d">04/06/26 · มีสลิป</div></div><span class="badge success">จ่ายแล้ว</span></div>
+          </div>
+          <div class="card">
+            <div class="ct">บัญชีรายการคอม</div>
+            <div class="led"><div><div class="lt">คอมปิดดีล</div><div class="ld">วันนี้ 11:20</div></div><span class="lp">+฿250</span></div>
+            <div class="led"><div><div class="lt">ค่าแนะนำ ชั้น 1 — สุดา</div><div class="ld">เมื่อวาน</div></div><span class="lp">+฿10</span></div>
+            <div class="led"><div><div class="lt">ค่าแนะนำ ชั้น 2 — อนันต์</div><div class="ld">เมื่อวาน</div></div><span class="lp">+฿10</span></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none"><path d="M3 10l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>หน้าหลัก</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-5.3-7-11a7 7 0 1114 0c0 5.7-7 11-7 11z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="2"/></svg>เช็คอิน</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>แผนที่</div>
+          <div class="tab on"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="20" height="13" rx="3" stroke="currentColor" stroke-width="2"/><path d="M16 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M2 10h20" stroke="currentColor" stroke-width="2"/></svg>กระเป๋าเงิน</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 21a8 8 0 0116 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>โปรไฟล์</div>
+        </div>
+      </div></div>
+      <div class="cap">กระเป๋าเงิน<span>ยอดถอนได้ + รายได้ + ledger</span></div>
+    </div>
+
+    <div>
+      <div class="phone"><div class="notch"></div><div class="screen">
+        <div class="sb"><span>09:41</span><span>
+          <svg width="17" height="11" viewBox="0 0 17 11" style="vertical-align:middle"><rect x="0" y="6" width="3" height="5" rx="1" fill="#111827"/><rect x="4" y="4" width="3" height="7" rx="1" fill="#111827"/><rect x="8" y="2" width="3" height="9" rx="1" fill="#111827"/><rect x="12" y="0" width="3" height="11" rx="1" fill="#111827"/></svg>
+        </span></div>
+        <div style="background:var(--primary);color:#fff;padding:4px 18px 16px"><div style="font-size:18px;font-weight:700">ขอถอนเงิน</div></div>
+        <div class="pbody">
+          <div class="card" style="margin-top:2px;background:var(--primary-light);border-color:#dfe3ff">
+            <div class="kv" style="border:none"><span class="k" style="color:var(--primary-dark)">ยอดถอนได้สูงสุด</span><span class="v" style="color:var(--primary);font-size:18px">฿7,028.40</span></div>
+          </div>
+          <span class="lbl">จำนวนเงินที่ต้องการถอน</span>
+          <div class="input" style="font-size:22px;font-weight:800;text-align:center;padding:14px">฿ 2,000</div>
+          <span class="lbl">ธนาคาร</span><div class="input">กสิกรไทย</div>
+          <div class="grid2">
+            <div><span class="lbl">เลขบัญชี</span><div class="input">123-4-56789-0</div></div>
+            <div><span class="lbl">ชื่อบัญชี</span><div class="input">สมชาย ใจดี</div></div>
+          </div>
+          <span class="lbl">หมายเหตุ (ถ้ามี)</span><div class="input ph">ขอถอนรอบนี้ครับ</div>
+          <div style="background:var(--primary);color:#fff;border-radius:13px;padding:14px;text-align:center;font-weight:800;font-size:15px;margin-top:18px">ยืนยันการขอถอน</div>
+        </div>
+      </div></div>
+      <div class="cap">ฟอร์มขอถอน<span>ตรวจยอด ≤ ถอนได้ · prefill บัญชี</span></div>
+    </div>
+  </div>
+
+  <div class="legend-note">
+    💰 ตัวเลขทั้งหมดอ้างอิงตรรกะจริง: ปิดดีล 1 ครั้ง = คอม ฿250 · ค่าแนะนำไล่ขึ้นสาย (สมชาย←สุดา←อนันต์)<br/>
+    หน้าจอจริงอยู่ที่ <code>dashboard/src/pages/{WithdrawalsPage,AffiliatePage}.tsx</code> และ <code>mobile/src/screens/WalletScreen.tsx</code>
+  </div>
+</div>
+</body>
+</html>
