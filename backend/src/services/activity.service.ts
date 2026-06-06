@@ -2,6 +2,7 @@ import type { Brand, EventType, Prisma, VisitStatus } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { toWorkDate } from '../utils/date';
 import { computeLeg } from './maps.service';
+import { accrueDealCommission } from './commission.service';
 
 export interface CreateActivityInput {
   userId: string;
@@ -57,7 +58,7 @@ export async function createActivity(input: CreateActivityInput) {
     }
   }
 
-  return prisma.activity.create({
+  const activity = await prisma.activity.create({
     data: {
       userId: input.userId,
       eventType: input.eventType,
@@ -80,6 +81,17 @@ export async function createActivity(input: CreateActivityInput) {
     },
     include: { store: true },
   });
+
+  // ปิดดีลสำเร็จ → คิดคอมมิชชั่น + ค่าแนะนำสายแนะนำ (affiliate)
+  if (activity.eventType === 'CHECK_IN' && activity.visitStatus === 'SUCCESS') {
+    try {
+      await accrueDealCommission(activity.id, input.userId);
+    } catch (err) {
+      console.error('accrueDealCommission failed:', (err as Error).message);
+    }
+  }
+
+  return activity;
 }
 
 /** กิจกรรมของเซลล์คนหนึ่งในวันที่กำหนด (ค่าเริ่มต้น = วันนี้) */

@@ -17,6 +17,12 @@ export const publicUserSelect = {
   active: true,
   targetDailyClose: true,
   photoUrl: true,
+  commissionPerDeal: true,
+  referralPercent: true,
+  referredById: true,
+  bankName: true,
+  bankAccountNumber: true,
+  bankAccountName: true,
   createdAt: true,
 } as const;
 

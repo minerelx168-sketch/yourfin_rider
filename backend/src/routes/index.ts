@@ -5,6 +5,8 @@ import storeRoutes from './store.routes';
 import dashboardRoutes from './dashboard.routes';
 import userRoutes from './user.routes';
 import uploadRoutes from './upload.routes';
+import walletRoutes from './wallet.routes';
+import adminRoutes from './admin.routes';
 
 const router = Router();
 
@@ -18,5 +20,7 @@ router.use('/stores', storeRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/users', userRoutes);
 router.use('/uploads', uploadRoutes);
+router.use('/wallet', walletRoutes);
+router.use('/admin', adminRoutes);
 
 export default router;

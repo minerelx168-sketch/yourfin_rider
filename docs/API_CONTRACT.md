@@ -19,6 +19,8 @@ REST API ของระบบ ใช้ร่วมกันทั้ง **mobi
 | `VisitStatus` | `SUCCESS`, `PENDING`, `REJECTED` |
 | `PartnerStatus` | `PROSPECT`, `ACTIVE`, `CLOSED` |
 | `CalcStatus` | `PENDING`, `DONE`, `SKIP`, `ERROR` |
+| `CommissionType` | `DEAL`, `REFERRAL`, `ADJUSTMENT` |
+| `WithdrawalStatus` | `PENDING`, `APPROVED`, `REJECTED`, `PAID` |
 
 ---
 
@@ -40,8 +42,13 @@ Response `201`: `{ "user": User }`
 {
   "id": "cuid", "email": "x@y.co", "name": "สมชาย",
   "phone": null, "team": "Sales", "region": "กรุงเทพฯ",
-  "role": "SALES", "active": true, "targetDailyClose": 4,
-  "photoUrl": null, "createdAt": "ISO"
+  "role": "SALES", "active": true, "targetDailyClose": 4, "photoUrl": null,
+  // คอมมิชชั่น & affiliate
+  "commissionPerDeal": 250,        // คอมคงที่ต่อดีลที่ปิดได้ (บาท)
+  "referralPercent": 5,            // % ที่ "ผู้แนะนำของฉัน" ได้รับต่อดีลในสายของฉัน
+  "referredById": "cuid|null",     // ผู้แนะนำ (upline)
+  "bankName": null, "bankAccountNumber": null, "bankAccountName": null,
+  "createdAt": "ISO"
 }
 ```
 
@@ -166,7 +173,77 @@ Response `201`: `{ "url": string, "filename": string, "size": number }`
 ## Users  (ADMIN)
 
 - `GET /users` → `{ "users": User[] }`
-- `PATCH /users/:id` → `{ name?, phone?, team?, region?, role?, active?, targetDailyClose? }` → `{ "user": User }`
+- `PATCH /users/:id` → ตั้งค่าทั่วไป + **คอม/affiliate**:
+  `{ name?, phone?, team?, region?, role?, active?, targetDailyClose?,`
+  ` commissionPerDeal?, referralPercent?, referredById?(string|null),`
+  ` bankName?, bankAccountNumber?, bankAccountName? }` → `{ "user": User }`
+  > ตั้ง `referredById` เพื่อผูกสายแนะนำ (affiliate). ระบบกันสายวน (ตอบ 400 ถ้าวน)
+
+---
+
+## Wallet & Withdrawals  (ไรเดอร์ — auth)
+
+### `GET /wallet`
+```jsonc
+{
+  "balance": { "totalEarned": 7928.4, "totalPaid": 600, "pending": 300, "available": 7028.4 },
+  "settings": { "commissionPerDeal": 250, "referralPercent": 5, "referredById": null,
+                "bankName": "กสิกรไทย", "bankAccountNumber": "...", "bankAccountName": "สมชาย ใจดี" },
+  "earnedFromDeals": 7250, "earnedFromReferral": 678.4, "directReferrals": 2,
+  "recentEntries": [ CommissionEntry, ... ]   // 30 ล่าสุด
+}
+```
+**CommissionEntry**
+```jsonc
+{ "id":"...","userId":"...","type":"DEAL|REFERRAL|ADJUSTMENT","amount":250,"level":0,
+  "sourceActivityId":"...","sourceUserId":"...","note":null,"createdAt":"ISO" }
+```
+
+### `POST /wallet/withdrawals`
+Request: `{ "amount": number, "bankName"?, "bankAccountNumber"?, "bankAccountName"?, "note"? }`
+- ตรวจ `amount` ≤ `available` (ไม่พอ → 400 พร้อม `details.available`)
+Response `201`: `{ "withdrawal": Withdrawal }`
+
+### `GET /wallet/withdrawals`
+Response: `{ "withdrawals": Withdrawal[] }`  (ของฉัน เรียงล่าสุดก่อน)
+
+**Withdrawal object**
+```jsonc
+{ "id":"...","userId":"...","amount":500,"status":"PENDING|APPROVED|REJECTED|PAID",
+  "bankName":"...","bankAccountNumber":"...","bankAccountName":"...","note":null,
+  "slipUrl":null,"adminNote":null,"processedById":null,
+  "requestedAt":"ISO","processedAt":null,
+  "user"?:{ "id","name","region","phone" } }   // user แนบมาเฉพาะ endpoint ของแอดมิน
+```
+
+---
+
+## Admin — Withdrawals  (ADMIN / MANAGER)
+
+### `GET /admin/withdrawals?status=&from=YYYY-MM-DD&to=YYYY-MM-DD`
+```jsonc
+{
+  "withdrawals": [ Withdrawal (มี user), ... ],   // เรียง PENDING ก่อน
+  "summary": {
+    "pending":  { "count":2, "amount":550 },
+    "approved": { "count":1, "amount":400 },
+    "paid":     { "count":2, "amount":1100 },
+    "rejected": { "count":1, "amount":150 }
+  }
+}
+```
+
+### `PATCH /admin/withdrawals/:id`
+Request: `{ "action": "APPROVE"|"REJECT"|"PAY", "slipUrl"?, "adminNote"? }`
+- `APPROVE`: PENDING → APPROVED
+- `REJECT`: PENDING/APPROVED → REJECTED
+- `PAY`: PENDING/APPROVED → PAID — **ต้องมี `slipUrl`** (อัปโหลดรูปสลิปผ่าน `POST /uploads` ก่อน)
+- เปลี่ยนสถานะที่ไม่อนุญาต → 409
+Response: `{ "withdrawal": Withdrawal }`
+
+> **คอมมิชชั่นเข้ากระเป๋าเมื่อไร:** ทุกครั้งที่บันทึก check-in สถานะ `SUCCESS` ระบบจะให้คอมฐาน
+> `commissionPerDeal` แก่ไรเดอร์ แล้วไล่จ่ายค่าแนะนำขึ้นสายแนะนำ (สูงสุด 5 ชั้น):
+> ผู้แนะนำชั้นที่ n ได้ = `คอมฐาน × (referralPercent ของโหนดชั้นล่าง) %`
 
 ---
 

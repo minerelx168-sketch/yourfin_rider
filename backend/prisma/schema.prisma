@@ -70,13 +70,29 @@ model User {
   active           Boolean  @default(true)
   targetDailyClose Int      @default(3) // เป้าปิดดีลต่อวัน
   photoUrl         String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
 
-  activities    Activity[]
-  storesCreated Store[]    @relation("StoreCreatedBy")
+  // ── คอมมิชชั่น & affiliate ─────────────────────────────────
+  commissionPerDeal Int     @default(0) // คอมคงที่ต่อ 1 ดีลที่ปิดได้ (บาท)
+  referralPercent   Float   @default(0) // % ของคอมฐานที่ "ผู้แนะนำของฉัน" ได้รับต่อดีลในสายของฉัน
+  referredById      String? // ผู้แนะนำ (upline)
+  referredBy        User?   @relation("Referral", fields: [referredById], references: [id])
+  referrals         User[]  @relation("Referral")
+
+  // ── ข้อมูลบัญชีรับเงิน (สำหรับถอนคอม) ──────────────────────
+  bankName          String?
+  bankAccountNumber String?
+  bankAccountName   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  activities       Activity[]
+  storesCreated    Store[]           @relation("StoreCreatedBy")
+  commissionEntries CommissionEntry[]
+  withdrawals      Withdrawal[]
 
   @@index([role])
+  @@index([referredById])
   @@map("users")
 }
 
@@ -139,4 +155,67 @@ model Activity {
   @@index([eventType])
   @@index([visitStatus])
   @@map("activities")
+}
+
+// ── ประเภทรายการคอมมิชชั่น ────────────────────────────────────
+enum CommissionType {
+  DEAL // คอมจากการปิดดีลของตัวเอง
+  REFERRAL // ค่าแนะนำจากดีลของลูกสาย (affiliate)
+  ADJUSTMENT // ปรับปรุงยอดโดยแอดมิน (+/-)
+}
+
+// ── สถานะคำขอถอนเงิน ──────────────────────────────────────────
+enum WithdrawalStatus {
+  PENDING // รออนุมัติ
+  APPROVED // อนุมัติแล้ว รอจ่าย
+  REJECTED // ปฏิเสธ
+  PAID // จ่ายแล้ว (มีสลิป)
+}
+
+// บัญชีแยกประเภทคอมมิชชั่น (ledger) — แต่ละแถว = เงินเข้ากระเป๋าไรเดอร์ 1 รายการ
+model CommissionEntry {
+  id     String         @id @default(cuid())
+  userId String // ผู้รับเงิน (ไรเดอร์/ผู้แนะนำ)
+  user   User           @relation(fields: [userId], references: [id])
+  type   CommissionType
+  amount Float // บาท (เป็นลบได้สำหรับ ADJUSTMENT)
+  level  Int            @default(0) // 0 = ดีลตัวเอง, 1.. = ชั้นของ affiliate
+
+  sourceActivityId String? // ดีล (check-in) ต้นทาง
+  sourceUserId     String? // ไรเดอร์ที่ปิดดีลต้นทาง (สำหรับ REFERRAL)
+  note             String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("commission_entries")
+}
+
+// คำขอถอนคอมมิชชั่นของไรเดอร์ + ข้อมูลสลิปที่แอดมินจ่าย
+model Withdrawal {
+  id     String           @id @default(cuid())
+  userId String
+  user   User             @relation(fields: [userId], references: [id])
+  amount Float
+  status WithdrawalStatus @default(PENDING)
+
+  // snapshot บัญชีรับเงิน ณ ตอนยื่นคำขอ
+  bankName          String?
+  bankAccountNumber String?
+  bankAccountName   String?
+  note              String? // หมายเหตุจากไรเดอร์
+
+  // ฝั่งแอดมินตอนดำเนินการ
+  slipUrl       String? // รูปสลิปการโอน
+  adminNote     String?
+  processedById String? // แอดมินผู้ดำเนินการ
+  requestedAt   DateTime  @default(now())
+  processedAt   DateTime?
+
+  @@index([userId])
+  @@index([status])
+  @@index([requestedAt])
+  @@map("withdrawals")
 }

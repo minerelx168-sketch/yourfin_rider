@@ -49,6 +49,39 @@ function weightedStatus(): VisitStatus {
   return VisitStatus.REJECTED;
 }
 
+type RiderNode = {
+  id: string;
+  commissionPerDeal: number;
+  referredById: string | null;
+  referralPercent: number;
+};
+
+// คิดคอม + ค่าแนะนำหลายชั้น (mirror ของ commission.service.accrueDealCommission)
+async function accrueSeed(
+  activityId: string,
+  rider: RiderNode,
+  userById: Map<string, RiderNode>,
+) {
+  const base = rider.commissionPerDeal || 0;
+  const entries: Record<string, unknown>[] = [];
+  if (base > 0) {
+    entries.push({ userId: rider.id, type: 'DEAL', amount: base, level: 0, sourceActivityId: activityId, sourceUserId: rider.id });
+  }
+  let current: RiderNode = rider;
+  const seen = new Set<string>([rider.id]);
+  for (let level = 1; level <= 5 && current.referredById; level++) {
+    const ref = userById.get(current.referredById);
+    if (!ref || seen.has(ref.id)) break;
+    seen.add(ref.id);
+    const amt = Math.round(base * (current.referralPercent || 0)) / 100;
+    if (amt > 0) {
+      entries.push({ userId: ref.id, type: 'REFERRAL', amount: amt, level, sourceActivityId: activityId, sourceUserId: rider.id, note: `ค่าแนะนำชั้น ${level}` });
+    }
+    current = ref;
+  }
+  if (entries.length) await prisma.commissionEntry.createMany({ data: entries as never });
+}
+
 async function main() {
   console.log('🌱 Seeding YourFin Rider database...');
 
@@ -83,29 +116,43 @@ async function main() {
     },
   });
 
+  // ไรเดอร์ + ตั้งค่าคอม/affiliate (สายแนะนำหลายชั้น)
+  // สายแนะนำ: สมชาย (บนสุด) ← สุดา ← อนันต์ ,  สมชาย ← น้อง
   const salesSeeds = [
-    { email: 'somchai@yourfin.co', name: 'สมชาย ใจดี', region: 'กรุงเทพฯ ตะวันออก', target: 4 },
-    { email: 'suda@yourfin.co', name: 'สุดา รักงาน', region: 'กรุงเทพฯ เหนือ', target: 4 },
-    { email: 'anan@yourfin.co', name: 'อนันต์ ขยันขาย', region: 'กรุงเทพฯ ใต้', target: 3 },
-    { email: 'nong@yourfin.co', name: 'น้อง พากเพียร', region: 'นนทบุรี', target: 3 },
+    { email: 'somchai@yourfin.co', name: 'สมชาย ใจดี', region: 'กรุงเทพฯ ตะวันออก', target: 4,
+      commissionPerDeal: 250, referralPercent: 0, referredBy: null as string | null, bank: 'กสิกรไทย', acc: '123-4-56789-0' },
+    { email: 'suda@yourfin.co', name: 'สุดา รักงาน', region: 'กรุงเทพฯ เหนือ', target: 4,
+      commissionPerDeal: 200, referralPercent: 5, referredBy: 'somchai@yourfin.co', bank: 'ไทยพาณิชย์', acc: '456-7-89012-3' },
+    { email: 'anan@yourfin.co', name: 'อนันต์ ขยันขาย', region: 'กรุงเทพฯ ใต้', target: 3,
+      commissionPerDeal: 200, referralPercent: 5, referredBy: 'suda@yourfin.co', bank: 'กรุงเทพ', acc: '789-0-12345-6' },
+    { email: 'nong@yourfin.co', name: 'น้อง พากเพียร', region: 'นนทบุรี', target: 3,
+      commissionPerDeal: 180, referralPercent: 4, referredBy: 'somchai@yourfin.co', bank: 'กรุงไทย', acc: '012-3-45678-9' },
   ];
 
   const sales = [];
+  const byEmail = new Map<string, string>();
   for (const s of salesSeeds) {
-    sales.push(
-      await prisma.user.create({
-        data: {
-          email: s.email,
-          passwordHash: passSales,
-          name: s.name,
-          role: 'SALES',
-          region: s.region,
-          team: 'Sales',
-          targetDailyClose: s.target,
-        },
-      }),
-    );
+    const u = await prisma.user.create({
+      data: {
+        email: s.email,
+        passwordHash: passSales,
+        name: s.name,
+        role: 'SALES',
+        region: s.region,
+        team: 'Sales',
+        targetDailyClose: s.target,
+        commissionPerDeal: s.commissionPerDeal,
+        referralPercent: s.referralPercent,
+        referredById: s.referredBy ? byEmail.get(s.referredBy) ?? null : null,
+        bankName: s.bank,
+        bankAccountName: s.name,
+        bankAccountNumber: s.acc,
+      },
+    });
+    byEmail.set(s.email, u.id);
+    sales.push(u);
   }
+  const userById = new Map(sales.map((u) => [u.id, u]));
 
   // ร้านค้าตัวอย่าง
   const storeSeeds = [
@@ -157,7 +204,7 @@ async function main() {
         const eventTime = new Date(day);
         eventTime.setHours(hour, minute, 0, 0);
         const km = prev ? haversineKm(prev, loc) : 0;
-        await prisma.activity.create({
+        const created = await prisma.activity.create({
           data: {
             userId: rider.id,
             eventType,
@@ -178,6 +225,7 @@ async function main() {
         });
         prev = loc;
         activityCount++;
+        return created;
       };
 
       // เริ่มงาน
@@ -188,11 +236,15 @@ async function main() {
       for (let v = 0; v < visits; v++) {
         const hour = 9 + Math.floor((v / visits) * 7); // กระจาย 9:00-16:00
         const loc = jitter(BKK, 0.07);
-        await pushActivity('CHECK_IN', hour, Math.floor(rand(0, 59)), loc, {
+        const status = weightedStatus();
+        const act = await pushActivity('CHECK_IN', hour, Math.floor(rand(0, 59)), loc, {
           storeName: pick(storeSeeds).name,
           brand: pick(BRANDS),
-          visitStatus: weightedStatus(),
+          visitStatus: status,
         });
+        if (status === VisitStatus.SUCCESS) {
+          await accrueSeed(act.id, rider as unknown as RiderNode, userById as unknown as Map<string, RiderNode>);
+        }
       }
 
       // เลิกงาน
@@ -200,11 +252,45 @@ async function main() {
     }
   }
 
+  // คำขอถอนคอมมิชชั่นตัวอย่าง (หลายสถานะ + สลิป)
+  const SLIP = 'https://placehold.co/480x720/png?text=Transfer+Slip';
+  const withdrawPlan: { email: string; amount: number; status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'PAID' }[] = [
+    { email: 'somchai@yourfin.co', amount: 600, status: 'PAID' },
+    { email: 'somchai@yourfin.co', amount: 300, status: 'PENDING' },
+    { email: 'suda@yourfin.co', amount: 400, status: 'APPROVED' },
+    { email: 'anan@yourfin.co', amount: 250, status: 'PENDING' },
+    { email: 'nong@yourfin.co', amount: 150, status: 'REJECTED' },
+  ];
+  let wdCount = 0;
+  for (const w of withdrawPlan) {
+    const uid = byEmail.get(w.email)!;
+    const u = userById.get(uid)! as unknown as { bankName: string; bankAccountNumber: string; bankAccountName: string };
+    await prisma.withdrawal.create({
+      data: {
+        userId: uid,
+        amount: w.amount,
+        status: w.status,
+        bankName: u.bankName,
+        bankAccountNumber: u.bankAccountNumber,
+        bankAccountName: u.bankAccountName,
+        note: w.status === 'PENDING' ? 'ขอถอนค่าคอมรอบนี้ครับ' : null,
+        slipUrl: w.status === 'PAID' ? SLIP : null,
+        adminNote: w.status === 'REJECTED' ? 'ยอดสะสมยังไม่ถึงเกณฑ์ขั้นต่ำ' : null,
+        processedById: w.status === 'PENDING' ? null : admin.id,
+        processedAt: w.status === 'PENDING' ? null : new Date(),
+      },
+    });
+    wdCount++;
+  }
+
+  const commissionTotal = await prisma.commissionEntry.aggregate({ _sum: { amount: true }, _count: { _all: true } });
+
   console.log(`✅ Done. Users: ${sales.length + 2}, Stores: ${storeSeeds.length}, Activities: ${activityCount}`);
+  console.log(`   Commission entries: ${commissionTotal._count._all} (รวม ${commissionTotal._sum.amount ?? 0} บาท), Withdrawals: ${wdCount}`);
   console.log('\n🔑 Login accounts (password):');
-  console.log('   admin@yourfin.co / admin1234     (ADMIN)');
+  console.log('   admin@yourfin.co / admin1234     (ADMIN — ดูคำขอถอน/ตั้งค่า affiliate)');
   console.log('   manager@yourfin.co / manager1234 (MANAGER — dashboard)');
-  console.log('   somchai@yourfin.co / sales1234   (SALES — mobile app)');
+  console.log('   somchai@yourfin.co / sales1234   (SALES — แอป + กระเป๋าเงิน/ถอนคอม)');
 }
 
 main()
