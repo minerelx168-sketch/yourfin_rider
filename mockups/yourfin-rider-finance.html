@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<title>YourFin Rider — Finance Role Mockup</title>
+<style>
+  :root{
+    --primary:#4f46e5;--primary-dark:#4338ca;--primary-light:#eef2ff;
+    --bg:#f5f6fa;--surface:#fff;--text:#111827;--muted:#6b7280;--border:#e5e7eb;
+    --success:#16a34a;--pending:#f59e0b;--rejected:#dc2626;--info:#4f46e5;
+    --success-bg:#dcfce7;--pending-bg:#fef3c7;--rejected-bg:#fee2e2;--info-bg:#eef2ff;
+    --success-tx:#15803d;--pending-tx:#b45309;--rejected-tx:#b91c1c;--info-tx:#4338ca;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Loma','Noto Sans Thai',-apple-system,'Segoe UI',sans-serif;background:linear-gradient(160deg,#eef2ff,#f5f6fa 45%,#e9ecf5);color:var(--text);padding:46px 24px 80px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto}
+  .page-head{text-align:center;margin-bottom:6px}
+  .page-head h1{font-size:31px;letter-spacing:-.5px}
+  .page-head .accent{color:var(--primary)}
+  .page-head p{color:var(--muted);margin-top:8px;font-size:15px}
+  .section-title{display:flex;align-items:center;gap:12px;margin:50px 0 24px;font-size:20px;font-weight:700}
+  .section-title .num{background:var(--primary);color:#fff;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:15px}
+  .section-title small{color:var(--muted);font-weight:400;font-size:14px}
+
+  .browser{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 26px 60px -18px rgba(31,41,55,.5);border:1px solid var(--border)}
+  .chrome{background:#e9edf3;padding:11px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+  .chrome .d{width:12px;height:12px;border-radius:50%}
+  .chrome .url{margin-left:12px;background:#fff;border-radius:7px;padding:5px 12px;font-size:12px;color:var(--muted);flex:1;max-width:360px}
+  .dash{display:flex;min-height:520px}
+  .side{width:212px;background:#1e1b4b;color:#c7d2fe;padding:18px 14px;flex-shrink:0;display:flex;flex-direction:column}
+  .side .brand{color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;gap:9px;margin-bottom:18px}
+  .side .logo{width:30px;height:30px;border-radius:9px;background:var(--primary);display:grid;place-items:center}
+  .navhd{font-size:10px;letter-spacing:1px;color:#7c7aa8;font-weight:800;margin:10px 6px 6px}
+  .nav{display:flex;flex-direction:column;gap:4px}
+  .nav a{padding:9px 12px;border-radius:9px;font-size:13px;display:flex;align-items:center;gap:10px;color:#c7d2fe}
+  .nav a.on{background:var(--primary);color:#fff;font-weight:700}
+  .nav a svg{width:17px;height:17px;flex-shrink:0}
+  .rolebadge{margin-top:auto;background:rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;font-size:11px;color:#c7d2fe;display:flex;align-items:center;gap:8px}
+  .rolebadge .av{width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px}
+  .rolebadge b{color:#fff;display:block;font-size:12px}
+  .main{flex:1;background:var(--bg);display:flex;flex-direction:column;min-width:0}
+  .topbar{background:#fff;border-bottom:1px solid var(--border);padding:13px 22px;display:flex;align-items:center;justify-content:space-between}
+  .topbar .h{font-size:17px;font-weight:700}
+  .topbar .r{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--muted)}
+  .search{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:7px 12px;font-size:12.5px;color:var(--muted);width:200px;display:flex;align-items:center;gap:7px}
+  .content{padding:20px 22px}
+
+  .scards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
+  .scard{background:#fff;border:1px solid var(--border);border-radius:13px;padding:13px 14px;position:relative;overflow:hidden}
+  .scard .stripe{position:absolute;left:0;top:0;bottom:0;width:4px}
+  .scard .l{font-size:11.5px;color:var(--muted)}
+  .scard .v{font-size:21px;font-weight:800;margin-top:4px;line-height:1.1}
+  .scard .c{font-size:11px;color:var(--muted);margin-top:3px}
+
+  .panel{background:#fff;border:1px solid var(--border);border-radius:13px;overflow:hidden}
+  .panel .pt{font-size:14px;font-weight:700;padding:13px 16px;border-bottom:1px solid var(--border)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;padding:10px 16px;border-bottom:1px solid var(--border);background:#fafbfc}
+  td{padding:11px 16px;border-bottom:1px solid #f1f2f6;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  .who{font-weight:700}.sub{font-size:11px;color:var(--muted);margin-top:1px}
+  .amt{font-weight:800}.mono{font-variant-numeric:tabular-nums}
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700}
+  .badge.success{background:var(--success-bg);color:var(--success-tx)}
+  .slipmini{width:30px;height:40px;border-radius:5px;background:linear-gradient(160deg,#7c3aed,#4f46e5);display:grid;place-items:center;color:#fff;font-size:7.5px;font-weight:800}
+  .sliplink{color:var(--primary);font-weight:700;font-size:11.5px;display:inline-flex;align-items:center;gap:6px}
+
+  /* slip vault grid */
+  .vault{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .slipcard{background:#fff;border:1px solid var(--border);border-radius:13px;overflow:hidden;box-shadow:0 3px 10px rgba(31,41,55,.05)}
+  .slipimg{height:150px;background:linear-gradient(160deg,#6d28d9,#4f46e5);position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff}
+  .slipimg .bank{position:absolute;top:9px;left:11px;font-size:11px;font-weight:800;display:flex;align-items:center;gap:5px;opacity:.95}
+  .slipimg .ok{font-size:11px;font-weight:700;background:rgba(255,255,255,.18);padding:3px 10px;border-radius:999px;display:flex;align-items:center;gap:5px}
+  .slipimg .amt2{font-size:23px;font-weight:800;margin-top:7px;letter-spacing:-.5px}
+  .slipimg .ref{font-size:8.5px;opacity:.8;margin-top:3px}
+  .slipimg .qr{position:absolute;right:10px;bottom:10px;width:34px;height:34px;background:#fff;border-radius:4px;background-image:repeating-linear-gradient(0deg,#111 0 2px,#fff 2px 4px),repeating-linear-gradient(90deg,#111 0 2px,#fff 2px 4px);opacity:.85}
+  .slipimg .zig{position:absolute;bottom:0;left:0;right:0;height:7px;background:linear-gradient(135deg,transparent 33%,#fff 33%,#fff 66%,transparent 66%) repeat-x;background-size:10px 7px}
+  .slipmeta{padding:10px 12px}
+  .slipmeta .nm{font-weight:700;font-size:12.5px}
+  .slipmeta .rw{display:flex;justify-content:space-between;align-items:center;margin-top:5px;font-size:11px;color:var(--muted)}
+  .slipmeta .rw .g{color:var(--success);font-weight:800;font-size:13px}
+  .note{font-size:12.5px;color:var(--muted);text-align:center;margin-top:46px;line-height:1.7}
+  .pill{background:var(--success-bg);color:var(--success-tx);font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="page-head">
+    <h1><span class="accent">YourFin</span> Rider — Role: ผู้จัดการฝ่ายการเงิน</h1>
+    <p>เห็นเฉพาะงานการเงิน — ภาพรวมการเงิน · รายการถอน · คลังสลิป &nbsp;(ถูกซ่อน/บล็อก KPI การขาย, แผนที่, ตั้งค่า affiliate, จัดการผู้ใช้)</p>
+  </div>
+
+  <!-- nav reference used in both frames -->
+  <!-- 1. FINANCE OVERVIEW -->
+  <div class="section-title"><span class="num">1</span> ภาพรวมการเงิน (Finance Overview)</div>
+  <div class="browser">
+    <div class="chrome"><span class="d" style="background:#ff5f57"></span><span class="d" style="background:#febc2e"></span><span class="d" style="background:#28c840"></span><span class="url">dashboard.yourfin.co/finance</span></div>
+    <div class="dash">
+      <div class="side">
+        <div class="brand"><span class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 17l3-8 4 5 3-7 4 10" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>YourFin Rider</div>
+        <div class="navhd">การเงิน</div>
+        <div class="nav">
+          <a class="on"><svg viewBox="0 0 24 24" fill="none"><path d="M3 13h4l2 5 4-12 2 7h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>ภาพรวมการเงิน</a>
+          <a><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M2 10h20" stroke="currentColor" stroke-width="2"/></svg>รายการรอถอน</a>
+          <a><svg viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/></svg>ประวัติการถอน</a>
+          <a><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>คลังสลิป</a>
+        </div>
+        <div class="rolebadge"><span class="av">กง</span><div><b>การเงิน ฝ่ายบัญชี</b>ผู้จัดการฝ่ายการเงิน</div></div>
+      </div>
+      <div class="main">
+        <div class="topbar"><div class="h">ภาพรวมการเงิน</div><div class="r"><span>อัปเดต 14:21:05</span></div></div>
+        <div class="content">
+          <div class="scards">
+            <div class="scard"><span class="stripe" style="background:var(--pending)"></span><div class="l">รอถอน</div><div class="v">2</div><div class="c">฿550</div></div>
+            <div class="scard"><span class="stripe" style="background:var(--info)"></span><div class="l">รออนุมัติจ่าย</div><div class="v">1</div><div class="c">฿400</div></div>
+            <div class="scard"><span class="stripe" style="background:var(--success)"></span><div class="l">จ่ายวันนี้</div><div class="v" style="color:var(--success)">฿600</div><div class="c">1 รายการ</div></div>
+            <div class="scard"><span class="stripe" style="background:#0891b2"></span><div class="l">จ่ายเดือนนี้</div><div class="v">฿1,100</div><div class="c">2 รายการ</div></div>
+            <div class="scard"><span class="stripe" style="background:var(--rejected)"></span><div class="l">ปฏิเสธ</div><div class="v">1</div><div class="c">฿150</div></div>
+          </div>
+          <div class="panel">
+            <div class="pt">รายการจ่ายล่าสุด</div>
+            <table>
+              <tr><th>ไรเดอร์</th><th>ธนาคาร / บัญชี</th><th>จำนวน</th><th>สถานะ</th><th>เวลาที่จ่าย</th><th>สลิป</th></tr>
+              <tr><td><div class="who">สมชาย ใจดี</div><div class="sub">กรุงเทพฯ ตะวันออก</div></td><td>กสิกรไทย<div class="sub mono">123-4-56789-0</div></td><td class="amt mono">฿600</td><td><span class="badge success">จ่ายแล้ว</span></td><td class="mono">วันนี้ 13:58</td><td><span class="sliplink"><span class="slipmini">SCB</span>ดูสลิป</span></td></tr>
+              <tr><td><div class="who">สุดา รักงาน</div><div class="sub">กรุงเทพฯ เหนือ</div></td><td>ไทยพาณิชย์<div class="sub mono">456-7-89012-3</div></td><td class="amt mono">฿500</td><td><span class="badge success">จ่ายแล้ว</span></td><td class="mono">เมื่อวาน 16:40</td><td><span class="sliplink"><span class="slipmini">SCB</span>ดูสลิป</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. SLIP VAULT -->
+  <div class="section-title"><span class="num">2</span> คลังสลิป (Slip Vault) <small>จัดเก็บ/ค้นหาสลิปการโอนทั้งหมด</small></div>
+  <div class="browser">
+    <div class="chrome"><span class="d" style="background:#ff5f57"></span><span class="d" style="background:#febc2e"></span><span class="d" style="background:#28c840"></span><span class="url">dashboard.yourfin.co/finance/slips</span></div>
+    <div class="dash">
+      <div class="side">
+        <div class="brand"><span class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 17l3-8 4 5 3-7 4 10" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>YourFin Rider</div>
+        <div class="navhd">การเงิน</div>
+        <div class="nav">
+          <a><svg viewBox="0 0 24 24" fill="none"><path d="M3 13h4l2 5 4-12 2 7h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>ภาพรวมการเงิน</a>
+          <a><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M2 10h20" stroke="currentColor" stroke-width="2"/></svg>รายการรอถอน</a>
+          <a><svg viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/></svg>ประวัติการถอน</a>
+          <a class="on"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>คลังสลิป</a>
+        </div>
+        <div class="rolebadge"><span class="av">กง</span><div><b>การเงิน ฝ่ายบัญชี</b>ผู้จัดการฝ่ายการเงิน</div></div>
+      </div>
+      <div class="main">
+        <div class="topbar"><div class="h">คลังสลิป · ทั้งหมด 6 สลิป</div><div class="r"><span class="search">🔍 ค้นหาชื่อไรเดอร์</span></div></div>
+        <div class="content">
+          <div class="vault">
+            <!-- card generator -->
+            <!-- 1 -->
+            <div class="slipcard"><div class="slipimg"><div class="bank">◇ SCB</div><div class="ok">✓ โอนเงินสำเร็จ</div><div class="amt2">฿600.00</div><div class="ref">REF 20260606S1Ltap…</div><div class="qr"></div><div class="zig"></div></div><div class="slipmeta"><div class="nm">สมชาย ใจดี</div><div class="rw"><span>กสิกรไทย</span><span class="g">฿600</span></div><div class="rw"><span>06/06/26 13:58</span></div></div></div>
+            <div class="slipcard"><div class="slipimg"><div class="bank">◇ SCB</div><div class="ok">✓ โอนเงินสำเร็จ</div><div class="amt2">฿500.00</div><div class="ref">REF 20260605S1Kpqr…</div><div class="qr"></div><div class="zig"></div></div><div class="slipmeta"><div class="nm">สุดา รักงาน</div><div class="rw"><span>ไทยพาณิชย์</span><span class="g">฿500</span></div><div class="rw"><span>05/06/26 16:40</span></div></div></div>
+            <div class="slipcard"><div class="slipimg"><div class="bank">◇ SCB</div><div class="ok">✓ โอนเงินสำเร็จ</div><div class="amt2">฿420.00</div><div class="ref">REF 20260604S1Mxyz…</div><div class="qr"></div><div class="zig"></div></div><div class="slipmeta"><div class="nm">อนันต์ ขยันขาย</div><div class="rw"><span>กรุงเทพ</span><span class="g">฿420</span></div><div class="rw"><span>04/06/26 11:20</span></div></div></div>
+            <div class="slipcard"><div class="slipimg"><div class="bank">◇ SCB</div><div class="ok">✓ โอนเงินสำเร็จ</div><div class="amt2">฿300.00</div><div class="ref">REF 20260603S1Nopq…</div><div class="qr"></div><div class="zig"></div></div><div class="slipmeta"><div class="nm">น้อง พากเพียร</div><div class="rw"><span>กรุงไทย</span><span class="g">฿300</span></div><div class="rw"><span>03/06/26 09:12</span></div></div></div>
+            <div class="slipcard"><div class="slipimg"><div class="bank">◇ SCB</div><div class="ok">✓ โอนเงินสำเร็จ</div><div class="amt2">฿250.00</div><div class="ref">REF 20260602S1Rstu…</div><div class="qr"></div><div class="zig"></div></div><div class="slipmeta"><div class="nm">สุดา รักงาน</div><div class="rw"><span>ไทยพาณิชย์</span><span class="g">฿250</span></div><div class="rw"><span>02/06/26 18:05</span></div></div></div>
+            <div class="slipcard"><div class="slipimg"><div class="bank">◇ SCB</div><div class="ok">✓ โอนเงินสำเร็จ</div><div class="amt2">฿800.00</div><div class="ref">REF 20260601S1Vwxy…</div><div class="qr"></div><div class="zig"></div></div><div class="slipmeta"><div class="nm">สมชาย ใจดี</div><div class="rw"><span>กสิกรไทย</span><span class="g">฿800</span></div><div class="rw"><span>01/06/26 10:33</span></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    🔐 เมนูฝั่งซ้ายของ role นี้ <b>ไม่มี</b> ภาพรวมการขาย/จัดอันดับ/แผนที่/ตั้งค่า affiliate — backend บล็อก 403 ด้วย<br/>
+    หน้าจริง: <code>dashboard/src/pages/Finance*.tsx</code> · ใช้ <code>GET /admin/finance/summary</code> และ <code>GET /admin/withdrawals?status=PAID</code>
+  </div>
+</div>
+</body>
+</html>
