@@ -14,6 +14,8 @@ interface Props {
   loading?: boolean;
   disabled?: boolean;
   color?: string;
+  /** Override the label / spinner color (defaults to white). */
+  textColor?: string;
   style?: ViewStyle;
 }
 
@@ -23,9 +25,11 @@ export function PrimaryButton({
   loading,
   disabled,
   color,
+  textColor,
   style,
 }: Props) {
   const bg = color ?? colors.primary;
+  const fg = textColor ?? '#fff';
   const isDisabled = disabled || loading;
   return (
     <Pressable
@@ -38,9 +42,9 @@ export function PrimaryButton({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color="#fff" />
+        <ActivityIndicator color={fg} />
       ) : (
-        <Text style={styles.text}>{title}</Text>
+        <Text style={[styles.text, { color: fg }]}>{title}</Text>
       )}
     </Pressable>
   );

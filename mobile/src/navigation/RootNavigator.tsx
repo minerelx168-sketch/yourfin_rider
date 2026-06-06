@@ -7,6 +7,7 @@ import { LoginScreen } from '../screens/LoginScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { CheckInScreen } from '../screens/CheckInScreen';
 import { MapScreen } from '../screens/MapScreen';
+import { WalletScreen } from '../screens/WalletScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { colors } from '../theme';
 
@@ -48,6 +49,14 @@ function MainTabs() {
         options={{
           title: 'แผนที่',
           tabBarIcon: ({ color }) => <TabIcon glyph="🗺️" color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="Wallet"
+        component={WalletScreen}
+        options={{
+          title: 'กระเป๋าเงิน',
+          tabBarIcon: ({ color }) => <TabIcon glyph="💰" color={color} />,
         }}
       />
       <Tab.Screen

@@ -20,6 +20,10 @@ export type PartnerStatus = 'PROSPECT' | 'ACTIVE' | 'CLOSED';
 
 export type CalcStatus = 'PENDING' | 'DONE' | 'SKIP' | 'ERROR';
 
+export type CommissionType = 'DEAL' | 'REFERRAL' | 'ADJUSTMENT';
+
+export type WithdrawalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'PAID';
+
 export interface User {
   id: string;
   email: string;
@@ -31,6 +35,14 @@ export interface User {
   active: boolean;
   targetDailyClose: number;
   photoUrl: string | null;
+  // คอมมิชชั่น & affiliate
+  commissionPerDeal: number;
+  referralPercent: number;
+  referredById: string | null;
+  // บัญชีรับโอน
+  bankName: string | null;
+  bankAccountNumber: string | null;
+  bankAccountName: string | null;
   createdAt: string;
 }
 
@@ -108,5 +120,74 @@ export interface CheckInInput {
   visitStatus: VisitStatus;
   storeId?: string;
   photoUrl?: string;
+  note?: string;
+}
+
+// ---- Wallet & Withdrawals ----
+
+/** Wallet money balances (บาท). */
+export interface Balance {
+  totalEarned: number;
+  totalPaid: number;
+  pending: number;
+  available: number;
+}
+
+/** Commission / affiliate + bank settings returned with the wallet. */
+export interface WalletSettings {
+  commissionPerDeal: number;
+  referralPercent: number;
+  referredById: string | null;
+  bankName: string | null;
+  bankAccountNumber: string | null;
+  bankAccountName: string | null;
+}
+
+/** A single ledger entry crediting the rider's wallet. */
+export interface CommissionEntry {
+  id: string;
+  userId: string;
+  type: CommissionType;
+  amount: number;
+  /** Affiliate tier (0 = own deal, 1..5 = referral depth). */
+  level: number;
+  sourceActivityId: string | null;
+  sourceUserId: string | null;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface Wallet {
+  balance: Balance;
+  settings: WalletSettings;
+  earnedFromDeals: number;
+  earnedFromReferral: number;
+  directReferrals: number;
+  recentEntries: CommissionEntry[];
+}
+
+export interface Withdrawal {
+  id: string;
+  userId: string;
+  amount: number;
+  status: WithdrawalStatus;
+  bankName: string | null;
+  bankAccountNumber: string | null;
+  bankAccountName: string | null;
+  note: string | null;
+  slipUrl: string | null;
+  adminNote: string | null;
+  processedById: string | null;
+  requestedAt: string;
+  processedAt: string | null;
+  /** Attached only on admin endpoints. */
+  user?: { id: string; name: string; region: string | null; phone: string | null };
+}
+
+export interface WithdrawalInput {
+  amount: number;
+  bankName?: string;
+  bankAccountNumber?: string;
+  bankAccountName?: string;
   note?: string;
 }

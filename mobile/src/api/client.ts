@@ -7,6 +7,9 @@ import type {
   Store,
   UploadResponse,
   User,
+  Wallet,
+  Withdrawal,
+  WithdrawalInput,
 } from '../types';
 
 /** Error thrown for non-2xx responses, carrying the server's `error` message. */
@@ -168,6 +171,28 @@ export async function uploadPhoto(
     method: 'POST',
     rawBody: form,
   });
+}
+
+// ---- Wallet & Withdrawals ----
+
+/** Rider's wallet: balances, commission/bank settings and recent ledger entries. */
+export function getWallet(): Promise<Wallet> {
+  return request<Wallet>('/wallet');
+}
+
+/** Request a commission withdrawal. Throws ApiError(400) if amount > available. */
+export async function requestWithdrawal(body: WithdrawalInput): Promise<Withdrawal> {
+  const res = await request<{ withdrawal: Withdrawal }>('/wallet/withdrawals', {
+    method: 'POST',
+    body,
+  });
+  return res.withdrawal;
+}
+
+/** List my withdrawals, most recent first. */
+export async function getMyWithdrawals(): Promise<Withdrawal[]> {
+  const res = await request<{ withdrawals: Withdrawal[] }>('/wallet/withdrawals');
+  return res.withdrawals;
 }
 
 function guessMimeType(name: string): string {
