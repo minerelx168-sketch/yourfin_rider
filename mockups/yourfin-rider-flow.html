@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<title>YourFin Rider — System Flow</title>
+<style>
+  :root{
+    --rider:#4f46e5;--rider-bg:#eef2ff;--be:#0891b2;--be-bg:#ecfeff;
+    --mgr:#16a34a;--mgr-bg:#dcfce7;--admin:#ea580c;--admin-bg:#fff7ed;
+    --text:#111827;--muted:#6b7280;--border:#e5e7eb;--line:#cbd5e1;
+    --pending:#f59e0b;--paid:#16a34a;--rej:#dc2626;--appr:#4f46e5;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Loma','Noto Sans Thai',-apple-system,'Segoe UI',sans-serif;background:#f5f6fa;color:var(--text);padding:40px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto}
+  h1{font-size:28px;text-align:center;letter-spacing:-.5px}
+  h1 .a{color:var(--rider)}
+  .sub{text-align:center;color:var(--muted);font-size:14px;margin-top:6px}
+  .legend{display:flex;gap:10px;justify-content:center;margin:18px 0 30px;flex-wrap:wrap}
+  .lg{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:999px;border:1px solid var(--border);background:#fff}
+  .sw{width:11px;height:11px;border-radius:3px}
+
+  .stage{display:flex;gap:16px;align-items:stretch}
+  .stage .num{width:40px;flex-shrink:0;display:flex;flex-direction:column;align-items:center}
+  .stage .num b{width:34px;height:34px;border-radius:50%;color:#fff;display:grid;place-items:center;font-size:15px;font-weight:800;z-index:2}
+  .stage .num .ln{flex:1;width:2px;background:var(--line);margin-top:2px}
+  .stage:last-child .num .ln{display:none}
+  .card{flex:1;background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:14px;border-left:5px solid var(--line);box-shadow:0 2px 6px rgba(31,41,55,.04)}
+  .card .hd{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+  .tag{font-size:10.5px;font-weight:800;padding:2px 9px;border-radius:6px;letter-spacing:.3px}
+  .card .ti{font-size:15px;font-weight:700}
+  .card p{font-size:12.8px;color:#374151;line-height:1.7}
+  .card .meta{font-size:11.5px;color:var(--muted);margin-top:6px;display:flex;flex-wrap:wrap;gap:6px}
+  .pill{background:#f1f5f9;border-radius:6px;padding:2px 8px;font-weight:600}
+
+  .rider .b{background:var(--rider)} .rider .card{border-left-color:var(--rider)} .rider .tag{background:var(--rider-bg);color:var(--rider)}
+  .be .b{background:var(--be)} .be .card{border-left-color:var(--be)} .be .tag{background:var(--be-bg);color:var(--be)}
+  .mgr .b{background:var(--mgr)} .mgr .card{border-left-color:var(--mgr)} .mgr .tag{background:var(--mgr-bg);color:var(--mgr)}
+
+  .branch{margin:0 0 14px 56px;display:flex;gap:12px}
+  .bcard{flex:1;background:var(--be-bg);border:1px dashed #67e8f9;border-radius:12px;padding:11px 13px}
+  .bcard .t{font-size:12.5px;font-weight:800;color:#0e7490;display:flex;align-items:center;gap:6px}
+  .bcard p{font-size:11.8px;color:#155e75;line-height:1.6;margin-top:4px}
+
+  .sectit{margin:34px 0 16px;font-size:18px;font-weight:800;display:flex;align-items:center;gap:10px}
+  .sectit .ic{width:28px;height:28px;border-radius:8px;background:var(--admin);color:#fff;display:grid;place-items:center;font-size:15px}
+
+  /* money pipeline */
+  .pipe{display:flex;align-items:stretch;gap:0;background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;overflow:hidden}
+  .step{flex:1;text-align:center;padding:0 8px;position:relative}
+  .step:not(:last-child)::after{content:'▶';position:absolute;right:-7px;top:26px;color:var(--line);font-size:13px}
+  .step .ico{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;margin:0 auto 8px;font-size:19px}
+  .step .st{font-size:12.5px;font-weight:700}
+  .step .sd{font-size:10.8px;color:var(--muted);margin-top:3px;line-height:1.5}
+  .who{font-size:9.5px;font-weight:800;padding:1px 7px;border-radius:5px;display:inline-block;margin-top:6px}
+  .w-rider{background:var(--rider-bg);color:var(--rider)} .w-admin{background:var(--admin-bg);color:var(--admin)} .w-sys{background:#f1f5f9;color:var(--muted)}
+
+  .states{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap;align-items:center}
+  .stbadge{font-size:11px;font-weight:800;padding:4px 11px;border-radius:999px}
+  .arrow{color:var(--line);font-weight:800}
+  .s-pend{background:#fef3c7;color:#b45309}.s-appr{background:#eef2ff;color:#4338ca}.s-paid{background:#dcfce7;color:#15803d}.s-rej{background:#fee2e2;color:#b91c1c}
+
+  .formula{background:#1e1b4b;color:#e0e7ff;border-radius:12px;padding:14px 18px;font-size:13px;margin-top:16px;line-height:1.9}
+  .formula code{background:rgba(255,255,255,.12);padding:1px 7px;border-radius:5px;font-weight:700;color:#fff}
+  .note{font-size:12px;color:var(--muted);text-align:center;margin-top:26px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><span class="a">YourFin</span> Rider — โฟลวการทำงานของระบบ</h1>
+  <div class="sub">เซลล์ไรเดอร์ลงพื้นที่ → Backend คำนวณ/คิดคอม → ผู้บริหารเห็นเรียลไทม์ → ถอนคอม</div>
+
+  <div class="legend">
+    <span class="lg"><span class="sw" style="background:var(--rider)"></span>ไรเดอร์ (Mobile)</span>
+    <span class="lg"><span class="sw" style="background:var(--be)"></span>Backend + MySQL</span>
+    <span class="lg"><span class="sw" style="background:var(--mgr)"></span>ผู้บริหาร (Dashboard)</span>
+    <span class="lg"><span class="sw" style="background:var(--admin)"></span>แอดมิน</span>
+  </div>
+
+  <!-- daily flow -->
+  <div class="stage rider">
+    <div class="num"><b class="b">1</b><div class="ln"></div></div>
+    <div class="card"><div class="hd"><span class="tag">ไรเดอร์</span><span class="ti">เข้าสู่ระบบ</span></div>
+      <p>ไรเดอร์ล็อกอินด้วยอีเมล/รหัสผ่าน ระบบออก <b>JWT token</b> เก็บในเครื่อง (SecureStore) ใช้ยืนยันตัวตนทุกคำขอ</p>
+      <div class="meta"><span class="pill">POST /auth/login</span><span class="pill">role: SALES</span></div>
+    </div>
+  </div>
+
+  <div class="stage rider">
+    <div class="num"><b class="b">2</b><div class="ln"></div></div>
+    <div class="card"><div class="hd"><span class="tag">ไรเดอร์</span><span class="ti">เริ่มงาน (Clock-in)</span></div>
+      <p>กดเริ่มงาน → แอปจับพิกัด GPS → ส่งเข้า Backend เป็น <b>จุดตั้งต้นของวัน (A0)</b> ระยะทาง = 0</p>
+      <div class="meta"><span class="pill">POST /activities/clock-in</span><span class="pill">lat,lng</span></div>
+    </div>
+  </div>
+
+  <div class="stage rider">
+    <div class="num"><b class="b">3</b><div class="ln"></div></div>
+    <div class="card"><div class="hd"><span class="tag">ไรเดอร์</span><span class="ti">เช็คอินร้าน (ทำซ้ำหลายร้าน/วัน)</span></div>
+      <p>ถึงร้านพาร์ทเนอร์ → จับ GPS + ถ่ายรูปหน้าร้าน + เลือกแบรนด์ + เลือกสถานะ (<b>ปิดดีล / รอตัดสินใจ / ปฏิเสธ</b>) → ส่งเข้า Backend</p>
+      <div class="meta"><span class="pill">POST /uploads (รูป)</span><span class="pill">POST /activities/check-in</span></div>
+    </div>
+  </div>
+
+  <!-- backend branch -->
+  <div class="branch">
+    <div class="bcard"><div class="t">🗺️ คำนวณระยะทาง</div><p>หา "จุดก่อนหน้า" ของไรเดอร์คนเดิมในวันเดียวกัน → เรียก <b>Google Maps Distance Matrix</b> (ขับขี่จริง) → เก็บ กม./นาที (ไม่มีคีย์ใช้ Haversine แทน)</p></div>
+    <div class="bcard"><div class="t">💰 คิดคอม + Affiliate</div><p>ถ้าสถานะ = <b>ปิดดีล</b>: ให้คอมฐานคงที่แก่ไรเดอร์ แล้วไล่จ่าย <b>ค่าแนะนำขึ้นสาย</b> (สูงสุด 5 ชั้น) ลงตาราง ledger</p></div>
+  </div>
+
+  <div class="stage rider">
+    <div class="num"><b class="b">4</b><div class="ln"></div></div>
+    <div class="card"><div class="hd"><span class="tag">ไรเดอร์</span><span class="ti">เลิกงาน (Clock-out) + ดูสรุป</span></div>
+      <p>ปิดวันทำงาน · หน้าหลักสรุป: เช็คอินวันนี้ / ปิดดีล / Conversion / ระยะทางรวม · แผนที่หมุดสีตามสถานะ</p>
+      <div class="meta"><span class="pill">POST /activities/clock-out</span><span class="pill">GET /activities/me/day</span></div>
+    </div>
+  </div>
+
+  <div class="stage mgr">
+    <div class="num"><b class="b">5</b><div class="ln"></div></div>
+    <div class="card"><div class="hd"><span class="tag">ผู้บริหาร</span><span class="ti">Dashboard เห็นผลแบบ near real-time</span></div>
+      <p>ทุกการเช็คอินไหลขึ้น Dashboard ทันที (poll ทุก 60 วิ): KPI รวม · จัดอันดับเซลล์ · แนวโน้มรายวัน · Coverage Map · ฟีดกิจกรรม — ลดการประชุมอัปเดตงาน</p>
+      <div class="meta"><span class="pill">GET /dashboard/overview · leaderboard · map · feed</span></div>
+    </div>
+  </div>
+
+  <!-- money flow -->
+  <div class="sectit"><span class="ic">฿</span> โฟลวเงิน — คอมมิชชั่น → กระเป๋า → ถอน → จ่าย</div>
+  <div class="pipe">
+    <div class="step"><div class="ico" style="background:var(--be-bg)">💸</div><div class="st">คอมเข้า ledger</div><div class="sd">ปิดดีล/ค่าแนะนำ บันทึกเป็นรายการเข้ากระเป๋า</div><div class="who w-sys">ระบบอัตโนมัติ</div></div>
+    <div class="step"><div class="ico" style="background:var(--rider-bg)">📱</div><div class="st">ยื่นขอถอน</div><div class="sd">ไรเดอร์กรอกจำนวน + บัญชี (กันถอนเกินยอด)</div><div class="who w-rider">ไรเดอร์</div></div>
+    <div class="step"><div class="ico" style="background:var(--admin-bg)">✅</div><div class="st">อนุมัติ</div><div class="sd">แอดมินตรวจคำขอ แล้วอนุมัติ/ปฏิเสธ</div><div class="who w-admin">แอดมิน</div></div>
+    <div class="step"><div class="ico" style="background:var(--mgr-bg)">🧾</div><div class="st">จ่าย + แนบสลิป</div><div class="sd">โอนเงินแล้วอัปโหลดรูปสลิป (บังคับ)</div><div class="who w-admin">แอดมิน</div></div>
+    <div class="step"><div class="ico" style="background:var(--mgr-bg)">💚</div><div class="st">PAID</div><div class="sd">หักออกจากยอดคงเหลือของไรเดอร์</div><div class="who w-sys">ระบบ</div></div>
+  </div>
+
+  <div class="states">
+    <span class="stbadge s-pend">PENDING รออนุมัติ</span><span class="arrow">→</span>
+    <span class="stbadge s-appr">APPROVED อนุมัติแล้ว</span><span class="arrow">→</span>
+    <span class="stbadge s-paid">PAID จ่ายแล้ว+สลิป</span>
+    <span style="width:18px"></span>
+    <span class="stbadge s-rej">REJECTED ปฏิเสธ</span>
+  </div>
+
+  <div class="formula">
+    <b>สูตรการเงิน</b><br/>
+    • คอมต่อดีล: ปิดดีล 1 ครั้ง → ไรเดอร์ได้ <code>commissionPerDeal</code> (คงที่)<br/>
+    • ค่าแนะนำหลายชั้น: ผู้แนะนำชั้นที่ n ได้ = <code>คอมฐาน × (referralPercent ของโหนดชั้นล่าง)%</code> &nbsp;(สูงสุด 5 ชั้น, กันสายวน)<br/>
+    • ยอดถอนได้ = <code>รายได้สะสม − จ่ายแล้ว − (รออนุมัติ + อนุมัติแล้ว)</code>
+  </div>
+
+  <div class="note">ทุกชั้นคุยกันผ่าน REST API ตาม <code>docs/API_CONTRACT.md</code> · ข้อมูลทั้งหมดอยู่ใน MySQL · โซนเวลา Asia/Bangkok</div>
+</div>
+</body>
+</html>
