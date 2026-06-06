@@ -66,6 +66,24 @@ export interface UserResponse {
   user: User;
 }
 
+/** Payload for POST /users — creating/issuing a new account. */
+export interface CreateUserBody {
+  email: string;
+  password: string;
+  name: string;
+  role: Role;
+  phone?: string | null;
+  region?: string | null;
+  team?: string | null;
+  targetDailyClose?: number;
+  commissionPerDeal?: number;
+  referralPercent?: number;
+  referredById?: string | null;
+  bankName?: string | null;
+  bankAccountNumber?: string | null;
+  bankAccountName?: string | null;
+}
+
 // ---- Commission & withdrawals ----
 
 export type CommissionType = 'DEAL' | 'REFERRAL' | 'ADJUSTMENT';

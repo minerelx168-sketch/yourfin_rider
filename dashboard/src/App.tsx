@@ -37,6 +37,9 @@ const WithdrawalsPage = lazy(() =>
 const AffiliatePage = lazy(() =>
   import('./pages/AffiliatePage').then((m) => ({ default: m.AffiliatePage })),
 );
+const UsersPage = lazy(() =>
+  import('./pages/UsersPage').then((m) => ({ default: m.UsersPage })),
+);
 const FinanceOverviewPage = lazy(() =>
   import('./pages/FinanceOverviewPage').then((m) => ({
     default: m.FinanceOverviewPage,
@@ -135,6 +138,16 @@ export default function App() {
                 element={
                   <RoleGate allow={['FINANCE', 'MANAGER', 'ADMIN']}>
                     <SlipVaultPage />
+                  </RoleGate>
+                }
+              />
+
+              {/* User management — MANAGER + ADMIN. */}
+              <Route
+                path="/users"
+                element={
+                  <RoleGate allow={['MANAGER', 'ADMIN']}>
+                    <UsersPage />
                   </RoleGate>
                 }
               />

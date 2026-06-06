@@ -1,7 +1,7 @@
 // Visit-status colors, shared by the map markers and status badges so they
 // stay consistent (per docs/API_CONTRACT.md convention).
 
-import type { VisitStatus, WithdrawalStatus } from '../types';
+import type { Role, VisitStatus, WithdrawalStatus } from '../types';
 
 export const STATUS_COLOR: Record<VisitStatus, string> = {
   SUCCESS: '#16a34a', // green
@@ -47,6 +47,33 @@ export const WITHDRAWAL_TEXT: Record<WithdrawalStatus, string> = {
   APPROVED: '#4338ca',
   PAID: '#15803d',
   REJECTED: '#b91c1c',
+};
+
+// ---- User roles ----
+// SALES=indigo, MANAGER=violet, FINANCE=teal, ADMIN=slate.
+
+/** Soft background tint for role badges. */
+export const ROLE_BG: Record<Role, string> = {
+  SALES: '#e0e7ff',
+  MANAGER: '#ede9fe',
+  FINANCE: '#ccfbf1',
+  ADMIN: '#e2e8f0',
+};
+
+/** Darker text color for role badges. */
+export const ROLE_TEXT: Record<Role, string> = {
+  SALES: '#4338ca',
+  MANAGER: '#6d28d9',
+  FINANCE: '#0f766e',
+  ADMIN: '#334155',
+};
+
+/** Dot color for role badges. */
+export const ROLE_DOT: Record<Role, string> = {
+  SALES: '#4f46e5',
+  MANAGER: '#7c3aed',
+  FINANCE: '#0d9488',
+  ADMIN: '#475569',
 };
 
 // Palette for brand charts.

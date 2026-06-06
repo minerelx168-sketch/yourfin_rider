@@ -52,8 +52,18 @@ const AffiliateIcon = (
   </svg>
 );
 
+const UsersIcon = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M16 19v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 17.5V19" />
+    <circle cx="10" cy="8" r="3" />
+    <path d="M20 19v-1.5a3.5 3.5 0 0 0-2.6-3.4" />
+    <path d="M15.5 5.2a3 3 0 0 1 0 5.6" />
+  </svg>
+);
+
 const SALES: Role[] = ['MANAGER', 'ADMIN'];
 const FINANCE: Role[] = ['FINANCE', 'MANAGER', 'ADMIN'];
+const ADMIN_MANAGER: Role[] = ['MANAGER', 'ADMIN'];
 const ADMIN_ONLY: Role[] = ['ADMIN'];
 
 const SECTIONS: NavSection[] = [
@@ -77,6 +87,7 @@ const SECTIONS: NavSection[] = [
   {
     heading: 'ผู้ดูแลระบบ',
     items: [
+      { to: '/users', label: 'ผู้ใช้งาน', icon: UsersIcon, roles: ADMIN_MANAGER },
       { to: '/affiliate', label: 'ตั้งค่าคอม/Affiliate', icon: AffiliateIcon, roles: ADMIN_ONLY },
     ],
   },

@@ -6,6 +6,7 @@
 import { getToken } from '../auth/tokenStore';
 import type {
   AdminWithdrawalsResponse,
+  CreateUserBody,
   DateRange,
   FeedResponse,
   FinanceSummary,
@@ -158,10 +159,19 @@ export function getActivityFeed(
   });
 }
 
-// ---- Users (ADMIN) ----
+// ---- Users (ADMIN / MANAGER) ----
 
 export function getUsers(): Promise<UsersResponse> {
   return request<UsersResponse>('/users');
+}
+
+/** Issues/creates a new user account. */
+export async function createUser(body: CreateUserBody): Promise<User> {
+  const res = await request<{ user: User }>('/users', {
+    method: 'POST',
+    body,
+  });
+  return res.user;
 }
 
 export async function updateUser(id: string, body: UserUpdate): Promise<User> {
@@ -170,6 +180,17 @@ export async function updateUser(id: string, body: UserUpdate): Promise<User> {
     body,
   });
   return res.user;
+}
+
+/** Issues a new password for a user. */
+export async function resetPassword(
+  id: string,
+  password: string,
+): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>(`/users/${id}/reset-password`, {
+    method: 'POST',
+    body: { password },
+  });
 }
 
 // ---- Uploads ----

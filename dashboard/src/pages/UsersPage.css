@@ -1,0 +1,198 @@
+/* Role summary chips (click to filter). */
+.user-chips {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.user-chip:hover {
+  border-color: var(--border-strong);
+}
+.user-chip.active {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.15);
+}
+.user-chip strong {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Toolbar: role presets on the left, search + add on the right. */
+.user-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.user-filters {
+  display: flex;
+  gap: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  flex-wrap: wrap;
+}
+/* Reuse the .preset look from the range filter for consistency. */
+.user-filters .preset {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.user-filters .preset:hover {
+  color: var(--text);
+}
+.user-filters .preset.active {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--brand);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+.user-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.user-search {
+  padding: 8px 12px;
+  font-size: 13px;
+  min-width: 220px;
+}
+
+.user-row-error {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: #fee2e2;
+  color: var(--danger);
+  font-size: 13px;
+}
+
+/* Table cells. */
+.user-name {
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.user-me-tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--brand);
+  background: var(--brand-soft);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+.user-sub {
+  font-size: 12px;
+  margin-top: 2px;
+}
+.user-email {
+  color: var(--text-muted);
+}
+.user-date {
+  font-size: 13px;
+}
+
+/* Active / inactive pill. */
+.badge.user-status.on {
+  background: #dcfce7;
+  color: #15803d;
+}
+.badge.user-status.off {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.user-locked {
+  font-size: 13px;
+}
+
+/* Per-row action buttons. */
+.user-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.btn.user-btn-edit,
+.btn.user-btn-reset,
+.btn.user-btn-on,
+.btn.user-btn-off {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+.btn.user-btn-edit {
+  background: var(--brand-soft);
+  border-color: #c7d2fe;
+  color: var(--brand);
+}
+.btn.user-btn-edit:hover {
+  background: #dbeafe;
+}
+.btn.user-btn-reset {
+  background: #fff;
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.btn.user-btn-off {
+  background: #fff;
+  border-color: #fecaca;
+  color: var(--danger);
+}
+.btn.user-btn-off:hover {
+  background: #fef2f2;
+}
+.btn.user-btn-on {
+  background: #fff;
+  border-color: #bbf7d0;
+  color: var(--success);
+}
+.btn.user-btn-on:hover {
+  background: #f0fdf4;
+}
+
+/* Active toggle in the edit modal. */
+.user-active-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+}
+.user-active-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+
+/* Reset-password success block. */
+.user-reset-done {
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  font-size: 14px;
+}
