@@ -1,6 +1,7 @@
 import { API_BASE_URL } from '../config';
 import type {
   Activity,
+  BankAccount,
   CheckInInput,
   LoginResponse,
   MyDayResponse,
@@ -180,7 +181,22 @@ export function getWallet(): Promise<Wallet> {
   return request<Wallet>('/wallet');
 }
 
-/** Request a commission withdrawal. Throws ApiError(400) if amount > available. */
+/**
+ * Set (or replace) the rider's single receiving bank account.
+ * A rider has exactly one account; this overwrites any previous one.
+ */
+export async function updateBankAccount(body: BankAccount): Promise<{ bank: BankAccount }> {
+  return request<{ bank: BankAccount }>('/wallet/bank', {
+    method: 'PATCH',
+    body,
+  });
+}
+
+/**
+ * Request a commission withdrawal into the saved profile bank account.
+ * Throws ApiError(400) if amount > available, or if no bank account is set
+ * (`details.needBankAccount === true`).
+ */
 export async function requestWithdrawal(body: WithdrawalInput): Promise<Withdrawal> {
   const res = await request<{ withdrawal: Withdrawal }>('/wallet/withdrawals', {
     method: 'POST',

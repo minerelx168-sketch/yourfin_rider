@@ -184,10 +184,19 @@ export interface Withdrawal {
   user?: { id: string; name: string; region: string | null; phone: string | null };
 }
 
+/**
+ * Body for `POST /wallet/withdrawals`.
+ * The receiving bank account is always the one saved on the rider's profile,
+ * so no bank fields are sent here.
+ */
 export interface WithdrawalInput {
   amount: number;
-  bankName?: string;
-  bankAccountNumber?: string;
-  bankAccountName?: string;
   note?: string;
+}
+
+/** The rider's single receiving bank account (set via `PATCH /wallet/bank`). */
+export interface BankAccount {
+  bankName: string;
+  bankAccountNumber: string;
+  bankAccountName: string;
 }

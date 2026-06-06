@@ -29,6 +29,18 @@ import {
   formatDateTime,
 } from '../theme';
 
+/** True when the rider has a saved receiving bank account. */
+function hasBankAccount(settings: Wallet['settings']): boolean {
+  return Boolean(settings.bankName && settings.bankAccountNumber);
+}
+
+/** "ธนาคาร •••1234" — masks all but the last 4 digits of the account number. */
+function maskedAccount(settings: Wallet['settings']): string {
+  const number = settings.bankAccountNumber ?? '';
+  const last4 = number.replace(/\D/g, '').slice(-4) || number.slice(-4);
+  return `${settings.bankName ?? ''} •••${last4}`.trim();
+}
+
 export function WalletScreen() {
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
@@ -36,6 +48,7 @@ export function WalletScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formVisible, setFormVisible] = useState(false);
+  const [bankFormVisible, setBankFormVisible] = useState(false);
 
   const load = useCallback(async (mode: 'initial' | 'refresh') => {
     if (mode === 'initial') setLoading(true);
@@ -67,7 +80,44 @@ export function WalletScreen() {
     load('refresh');
   }, [load]);
 
+  const handleBankSaved = useCallback(() => {
+    setBankFormVisible(false);
+    Alert.alert('บันทึกบัญชีแล้ว', 'บันทึกบัญชีรับเงินของคุณเรียบร้อยแล้ว');
+    load('refresh');
+  }, [load]);
+
+  // Pressing "ขอถอนเงิน": guide to set a bank account first if none is saved.
+  const handleWithdrawPress = useCallback(() => {
+    if (wallet && !hasBankAccount(wallet.settings)) {
+      Alert.alert(
+        'ยังไม่ได้ตั้งบัญชีรับเงิน',
+        'กรุณาตั้งบัญชีรับเงินก่อน จึงจะขอถอนเงินได้',
+        [
+          { text: 'ยกเลิก', style: 'cancel' },
+          { text: 'ตั้งบัญชีรับเงิน', onPress: () => setBankFormVisible(true) },
+        ],
+      );
+      return;
+    }
+    setFormVisible(true);
+  }, [wallet]);
+
+  // Defensive: backend says the account is missing (stale local state).
+  const handleNeedBankAccount = useCallback(() => {
+    setFormVisible(false);
+    Alert.alert(
+      'ยังไม่ได้ตั้งบัญชีรับเงิน',
+      'กรุณาตั้งบัญชีรับเงินก่อน จึงจะขอถอนเงินได้',
+      [
+        { text: 'ยกเลิก', style: 'cancel' },
+        { text: 'ตั้งบัญชีรับเงิน', onPress: () => setBankFormVisible(true) },
+      ],
+    );
+    load('refresh');
+  }, [load]);
+
   const balance = wallet?.balance;
+  const bankSet = wallet ? hasBankAccount(wallet.settings) : false;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -102,13 +152,19 @@ export function WalletScreen() {
               <Text style={styles.heroValue}>{formatBaht(balance.available)}</Text>
               <PrimaryButton
                 title="ขอถอนเงิน"
-                onPress={() => setFormVisible(true)}
+                onPress={handleWithdrawPress}
                 color={colors.white}
                 style={styles.heroButton}
                 textColor={colors.primary}
                 disabled={balance.available <= 0}
               />
             </View>
+
+            {/* Receiving bank account (single account) */}
+            <BankAccountCard
+              settings={wallet.settings}
+              onEdit={() => setBankFormVisible(true)}
+            />
 
             {/* Secondary balance stats */}
             <View style={styles.cards}>
@@ -145,16 +201,8 @@ export function WalletScreen() {
               <BreakdownRow
                 label="คอมต่อดีล"
                 value={formatBaht(wallet.settings.commissionPerDeal)}
+                last
               />
-              {wallet.settings.bankName ? (
-                <BreakdownRow
-                  label="บัญชีรับโอน"
-                  value={`${wallet.settings.bankName} ${
-                    wallet.settings.bankAccountNumber ?? ''
-                  }`.trim()}
-                  last
-                />
-              ) : null}
             </View>
 
             {/* Withdrawal history */}
@@ -179,15 +227,87 @@ export function WalletScreen() {
       </ScrollView>
 
       {wallet ? (
-        <WithdrawalForm
-          visible={formVisible}
-          available={wallet.balance.available}
-          settings={wallet.settings}
-          onClose={() => setFormVisible(false)}
-          onSubmitted={handleSubmitted}
-        />
+        <>
+          <WithdrawalForm
+            visible={formVisible}
+            available={wallet.balance.available}
+            settings={wallet.settings}
+            onClose={() => setFormVisible(false)}
+            onSubmitted={handleSubmitted}
+            onNeedBankAccount={handleNeedBankAccount}
+          />
+          <BankAccountForm
+            visible={bankFormVisible}
+            settings={wallet.settings}
+            isNew={!bankSet}
+            onClose={() => setBankFormVisible(false)}
+            onSaved={handleBankSaved}
+          />
+        </>
       ) : null}
     </SafeAreaView>
+  );
+}
+
+function BankAccountCard({
+  settings,
+  onEdit,
+}: {
+  settings: Wallet['settings'];
+  onEdit: () => void;
+}) {
+  const isSet = hasBankAccount(settings);
+
+  if (!isSet) {
+    return (
+      <View style={[styles.bankCard, styles.bankCardEmpty]}>
+        <Text style={styles.bankTitle}>บัญชีรับเงิน</Text>
+        <Text style={styles.bankPrompt}>ยังไม่ได้ตั้งบัญชีรับเงิน</Text>
+        <Text style={styles.bankPromptHint}>
+          ตั้งบัญชีรับเงินเพื่อใช้รับเงินถอนของคุณ
+        </Text>
+        <PrimaryButton
+          title="ตั้งบัญชีรับเงิน"
+          onPress={onEdit}
+          style={styles.bankButton}
+        />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.bankCard}>
+      <View style={styles.bankHeader}>
+        <Text style={styles.bankTitle}>บัญชีรับเงิน</Text>
+        <Pressable onPress={onEdit} hitSlop={8}>
+          <Text style={styles.bankEditLink}>แก้ไขบัญชี</Text>
+        </Pressable>
+      </View>
+      <BankInfoRow label="ธนาคาร" value={settings.bankName ?? '-'} />
+      <BankInfoRow label="เลขบัญชี" value={settings.bankAccountNumber ?? '-'} />
+      <BankInfoRow
+        label="ชื่อบัญชี"
+        value={settings.bankAccountName ?? '-'}
+        last
+      />
+    </View>
+  );
+}
+
+function BankInfoRow({
+  label,
+  value,
+  last,
+}: {
+  label: string;
+  value: string;
+  last?: boolean;
+}) {
+  return (
+    <View style={[styles.breakdownRow, last ? styles.breakdownRowLast : null]}>
+      <Text style={styles.breakdownLabel}>{label}</Text>
+      <Text style={styles.breakdownValue}>{value}</Text>
+    </View>
   );
 }
 
@@ -252,34 +372,26 @@ function WithdrawalForm({
   settings,
   onClose,
   onSubmitted,
+  onNeedBankAccount,
 }: {
   visible: boolean;
   available: number;
   settings: Wallet['settings'];
   onClose: () => void;
   onSubmitted: () => void;
+  onNeedBankAccount: () => void;
 }) {
   const [amount, setAmount] = useState('');
-  const [bankName, setBankName] = useState(settings.bankName ?? '');
-  const [bankAccountNumber, setBankAccountNumber] = useState(
-    settings.bankAccountNumber ?? '',
-  );
-  const [bankAccountName, setBankAccountName] = useState(
-    settings.bankAccountName ?? '',
-  );
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Prefill bank fields from settings whenever the form is (re)opened.
+  // Reset the form whenever it is (re)opened.
   useEffect(() => {
     if (visible) {
       setAmount('');
-      setBankName(settings.bankName ?? '');
-      setBankAccountNumber(settings.bankAccountNumber ?? '');
-      setBankAccountName(settings.bankAccountName ?? '');
       setNote('');
     }
-  }, [visible, settings]);
+  }, [visible]);
 
   const onSubmit = async () => {
     const value = Number(amount.replace(/,/g, ''));
@@ -299,13 +411,18 @@ function WithdrawalForm({
     try {
       await api.requestWithdrawal({
         amount: value,
-        bankName: bankName.trim() || undefined,
-        bankAccountNumber: bankAccountNumber.trim() || undefined,
-        bankAccountName: bankAccountName.trim() || undefined,
         note: note.trim() || undefined,
       });
       onSubmitted();
     } catch (e) {
+      // Defensive: backend rejects if no bank account is set on the profile.
+      if (
+        e instanceof ApiError &&
+        (e.details as { needBankAccount?: boolean } | undefined)?.needBankAccount
+      ) {
+        onNeedBankAccount();
+        return;
+      }
       const msg = e instanceof ApiError ? e.message : 'ขอถอนเงินไม่สำเร็จ';
       Alert.alert('ผิดพลาด', msg);
     } finally {
@@ -332,6 +449,15 @@ function WithdrawalForm({
           >
             <Text style={styles.modalTitle}>ขอถอนเงิน</Text>
 
+            {/* Receiving account is locked to the saved profile account */}
+            <View style={styles.lockedBank}>
+              <Text style={styles.lockedBankLabel}>โอนเข้า</Text>
+              <Text style={styles.lockedBankValue}>{maskedAccount(settings)}</Text>
+              <Text style={styles.lockedBankName}>
+                {settings.bankAccountName ?? ''}
+              </Text>
+            </View>
+
             <Text style={styles.label}>จำนวนเงิน (บาท) *</Text>
             <TextInput
               style={styles.input}
@@ -343,36 +469,6 @@ function WithdrawalForm({
               editable={!submitting}
             />
             <Text style={styles.hint}>ยอดถอนได้ {formatBaht(available)}</Text>
-
-            <Text style={styles.label}>ธนาคาร</Text>
-            <TextInput
-              style={styles.input}
-              value={bankName}
-              onChangeText={setBankName}
-              placeholder="เช่น กสิกรไทย"
-              placeholderTextColor={colors.textMuted}
-              editable={!submitting}
-            />
-
-            <Text style={styles.label}>เลขบัญชี</Text>
-            <TextInput
-              style={styles.input}
-              value={bankAccountNumber}
-              onChangeText={setBankAccountNumber}
-              placeholder="เลขที่บัญชี"
-              placeholderTextColor={colors.textMuted}
-              editable={!submitting}
-            />
-
-            <Text style={styles.label}>ชื่อบัญชี</Text>
-            <TextInput
-              style={styles.input}
-              value={bankAccountName}
-              onChangeText={setBankAccountName}
-              placeholder="ชื่อเจ้าของบัญชี"
-              placeholderTextColor={colors.textMuted}
-              editable={!submitting}
-            />
 
             <Text style={styles.label}>หมายเหตุ</Text>
             <TextInput
@@ -388,6 +484,134 @@ function WithdrawalForm({
 
             <PrimaryButton
               title="ยืนยันขอถอนเงิน"
+              onPress={onSubmit}
+              loading={submitting}
+              style={styles.modalSubmit}
+            />
+            <Pressable
+              onPress={onClose}
+              disabled={submitting}
+              style={styles.cancelButton}
+            >
+              <Text style={styles.cancelText}>ยกเลิก</Text>
+            </Pressable>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+function BankAccountForm({
+  visible,
+  settings,
+  isNew,
+  onClose,
+  onSaved,
+}: {
+  visible: boolean;
+  settings: Wallet['settings'];
+  isNew: boolean;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [bankName, setBankName] = useState('');
+  const [bankAccountNumber, setBankAccountNumber] = useState('');
+  const [bankAccountName, setBankAccountName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  // Prefill from the saved account whenever the form is (re)opened.
+  useEffect(() => {
+    if (visible) {
+      setBankName(settings.bankName ?? '');
+      setBankAccountNumber(settings.bankAccountNumber ?? '');
+      setBankAccountName(settings.bankAccountName ?? '');
+    }
+  }, [visible, settings]);
+
+  const onSubmit = async () => {
+    const name = bankName.trim();
+    const number = bankAccountNumber.trim();
+    const accountName = bankAccountName.trim();
+    if (!name || !number || !accountName) {
+      Alert.alert('ข้อมูลไม่ครบ', 'กรุณากรอก ธนาคาร เลขบัญชี และชื่อบัญชี ให้ครบ');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await api.updateBankAccount({
+        bankName: name,
+        bankAccountNumber: number,
+        bankAccountName: accountName,
+      });
+      onSaved();
+    } catch (e) {
+      const msg = e instanceof ApiError ? e.message : 'บันทึกบัญชีไม่สำเร็จ';
+      Alert.alert('ผิดพลาด', msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent
+      onRequestClose={onClose}
+    >
+      <KeyboardAvoidingView
+        style={styles.modalRoot}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={styles.modalCard}>
+          <View style={styles.modalHandle} />
+          <ScrollView
+            contentContainerStyle={styles.modalContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text style={styles.modalTitle}>
+              {isNew ? 'ตั้งบัญชีรับเงิน' : 'แก้ไขบัญชีรับเงิน'}
+            </Text>
+            <Text style={styles.modalSubtitle}>
+              คุณมีบัญชีรับเงินได้เพียง 1 บัญชี
+              การบันทึกจะแทนที่บัญชีเดิมทั้งหมด
+            </Text>
+
+            <Text style={styles.label}>ธนาคาร *</Text>
+            <TextInput
+              style={styles.input}
+              value={bankName}
+              onChangeText={setBankName}
+              placeholder="เช่น กสิกรไทย"
+              placeholderTextColor={colors.textMuted}
+              editable={!submitting}
+            />
+
+            <Text style={styles.label}>เลขบัญชี *</Text>
+            <TextInput
+              style={styles.input}
+              value={bankAccountNumber}
+              onChangeText={setBankAccountNumber}
+              placeholder="เลขที่บัญชี"
+              placeholderTextColor={colors.textMuted}
+              keyboardType="numbers-and-punctuation"
+              editable={!submitting}
+            />
+
+            <Text style={styles.label}>ชื่อบัญชี *</Text>
+            <TextInput
+              style={styles.input}
+              value={bankAccountName}
+              onChangeText={setBankAccountName}
+              placeholder="ชื่อเจ้าของบัญชี"
+              placeholderTextColor={colors.textMuted}
+              editable={!submitting}
+            />
+
+            <PrimaryButton
+              title="บันทึกบัญชี"
               onPress={onSubmit}
               loading={submitting}
               style={styles.modalSubmit}
@@ -439,6 +663,51 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 12,
   },
+
+  // Receiving bank account card
+  bankCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    paddingHorizontal: 8,
+    paddingTop: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  bankCardEmpty: {
+    padding: 16,
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryLight,
+  },
+  bankHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    marginBottom: 4,
+  },
+  bankTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  bankEditLink: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  bankPrompt: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+    marginTop: 8,
+  },
+  bankPromptHint: {
+    fontSize: 13,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
+  bankButton: { marginTop: 16 },
 
   panel: {
     backgroundColor: colors.surface,
@@ -513,7 +782,7 @@ const styles = StyleSheet.create({
   ledgerType: { fontSize: 15, fontWeight: '600', color: colors.text },
   ledgerAmount: { fontSize: 16, fontWeight: '700', color: colors.success },
 
-  // Withdrawal form modal
+  // Withdrawal / bank form modal
   modalRoot: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -540,6 +809,33 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.text,
     marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: colors.textMuted,
+    marginBottom: 4,
+  },
+  lockedBank: {
+    backgroundColor: colors.primaryLight,
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 12,
+  },
+  lockedBankLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  lockedBankValue: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.text,
+    marginTop: 2,
+  },
+  lockedBankName: {
+    fontSize: 14,
+    color: colors.textMuted,
+    marginTop: 2,
   },
   label: {
     fontSize: 14,
