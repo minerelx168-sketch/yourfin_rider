@@ -12,6 +12,10 @@ import apiRouter from './routes';
 export function createApp() {
   const app = express();
 
+  // Behind a reverse proxy / load balancer in production (nginx, Render, Railway,
+  // Fly, etc.) so rate-limiting and req.ip read the real client via X-Forwarded-For.
+  if (env.isProd) app.set('trust proxy', 1);
+
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(
     cors({

@@ -1,0 +1,59 @@
+# YourFin Rider — production stack (single host)
+#
+#   1) cp backend/.env.production.example backend/.env   # fill JWT_SECRET, etc.
+#   2) (optional) create a root .env with MYSQL_* + secrets (see DEPLOYMENT.md)
+#   3) docker compose -f docker-compose.prod.yml up -d --build
+#
+# Dashboard is served by nginx on :80 and proxies /api + /uploads to the API,
+# so the browser talks to a single origin (no CORS). Migrations run on boot.
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-me-root}
+      MYSQL_DATABASE: yourfin_rider
+      MYSQL_USER: ${MYSQL_USER:-yourfin}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-me}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD:-change-me-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    env_file:
+      - ./backend/.env
+    environment:
+      NODE_ENV: production
+      PORT: "4000"
+      # override DB host to the compose service (wins over .env)
+      DATABASE_URL: "mysql://${MYSQL_USER:-yourfin}:${MYSQL_PASSWORD:-change-me}@mysql:3306/yourfin_rider"
+    volumes:
+      - uploads_data:/app/uploads
+    expose:
+      - "4000"
+
+  dashboard:
+    build:
+      context: ./dashboard
+      args:
+        VITE_API_URL: /api
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  mysql_data:
+  uploads_data:

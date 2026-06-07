@@ -12,7 +12,8 @@
     "prisma:deploy": "prisma migrate deploy",
     "db:push": "prisma db push",
     "seed": "tsx prisma/seed.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "node test/e2e.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
