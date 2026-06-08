@@ -77,6 +77,30 @@ docker compose -f docker-compose.prod.yml exec backend npx tsx prisma/seed.ts
 
 ---
 
+## ตัวเลือก C — GitHub Pages (เฉพาะ dashboard) 🌐
+
+ใช้ deploy **dashboard** (static) อัตโนมัติด้วย GitHub Actions — ไฟล์ workflow มีให้แล้วที่
+`.github/workflows/deploy-pages.yml` (รองรับ sub-path, SPA fallback, และ build อัตโนมัติ)
+
+> ⚠️ **Pages เสิร์ฟ static เท่านั้น** — backend (API) + MySQL ต้อง host ที่อื่น (ดูตัวเลือก A/B)
+> แล้วชี้ dashboard ไปที่ API นั้นผ่านตัวแปร `VITE_API_URL`
+
+**ตั้งค่าครั้งเดียวในรีโป:**
+1. **Settings → Pages → Build and deployment → Source = "GitHub Actions"**
+2. **Settings → Secrets and variables → Actions → Variables** เพิ่มตัวแปร
+   **`VITE_API_URL` = `https://YOUR-API-HOST/api`** (URL ของ backend ที่ host ไว้)
+   - ต้องเปิด **CORS_ORIGINS** ฝั่ง backend ให้ครอบ `https://<owner>.github.io` ด้วย
+3. merge งานนี้เข้า **`main`** (workflow ทำงานเมื่อ push `main` ที่แตะ `dashboard/**` หรือกด Run เอง)
+
+**ผลลัพธ์:** เว็บจะอยู่ที่ `https://<owner>.github.io/yourfin_rider/`
+- asset/route ทำงานใต้ sub-path `/yourfin_rider/` (ตั้ง `base` อัตโนมัติจาก `VITE_BASE` ใน workflow)
+- refresh/ลิงก์ตรงที่ `/users`, `/finance/slips` ไม่ 404 (workflow ก๊อป `index.html`→`404.html`)
+
+> ใช้ **โดเมนของตัวเอง** (root path) ได้: เพิ่มไฟล์ `dashboard/public/CNAME` (โดเมน) แล้วเปลี่ยน
+> `VITE_BASE` ใน workflow เป็น `/` — asset จะอยู่ที่ root
+
+---
+
 ## ⚙️ Environment variables (backend)
 
 | ตัวแปร | จำเป็น | หมายเหตุ |

@@ -69,9 +69,12 @@ function RoleHomeRedirect() {
 }
 
 export default function App() {
+  // Honour Vite's `base` (e.g. "/yourfin_rider/" on GitHub Pages) so client-side
+  // routes resolve under the sub-path. Empty/"/" → served at root.
+  const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/';
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={basename}>
         <Suspense
           fallback={
             <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
