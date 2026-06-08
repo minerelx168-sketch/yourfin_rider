@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<title>YourFin Rider — Mobile Wallet (current)</title>
+<style>
+  :root{
+    --primary:#4f46e5;--primary-dark:#4338ca;--primary-light:#eef2ff;
+    --bg:#f5f6fa;--surface:#fff;--text:#111827;--muted:#6b7280;--border:#e5e7eb;
+    --success:#16a34a;--pending:#f59e0b;--rejected:#dc2626;
+    --success-bg:#dcfce7;--pending-bg:#fef3c7;--success-tx:#15803d;--pending-tx:#b45309;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Loma','Noto Sans Thai',-apple-system,'Segoe UI',sans-serif;background:linear-gradient(160deg,#eef2ff,#f5f6fa 45%,#e9ecf5);color:var(--text);padding:46px 24px 70px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1050px;margin:0 auto}
+  .head{text-align:center;margin-bottom:8px}
+  .head h1{font-size:28px}.head .a{color:var(--primary)}
+  .head p{color:var(--muted);margin-top:8px;font-size:14px}
+  .phones{display:flex;gap:38px;justify-content:center;flex-wrap:wrap;margin-top:30px}
+  .pw{width:300px}
+  .cap{text-align:center;margin-top:13px;font-weight:600;font-size:14px}
+  .cap span{display:block;color:var(--muted);font-weight:400;font-size:12px;margin-top:2px}
+  .phone{width:300px;height:634px;background:#000;border-radius:42px;padding:11px;box-shadow:0 22px 50px -12px rgba(31,41,55,.45),0 0 0 2px #1f2937;position:relative}
+  .screen{width:100%;height:100%;background:var(--bg);border-radius:32px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+  .notch{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:104px;height:25px;background:#000;border-radius:0 0 16px 16px;z-index:30}
+  .sb{height:38px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 22px 5px;font-size:12px;font-weight:600;z-index:5}
+  .sb.light{color:#fff}
+  .hero{background:linear-gradient(135deg,#4f46e5,#4338ca);color:#fff;padding:4px 18px 20px}
+  .hero .t{font-size:13px;opacity:.85}
+  .hero .big{font-size:36px;font-weight:800;margin-top:2px;letter-spacing:-1px}
+  .hero .big small{font-size:15px;font-weight:600;opacity:.9}
+  .hero .wbtn{margin-top:13px;background:#fff;color:var(--primary);border-radius:12px;padding:11px;text-align:center;font-weight:800;font-size:14px}
+  .pbody{flex:1;padding:13px;overflow:hidden}
+  .appbar{background:var(--primary);color:#fff;padding:4px 18px 16px}
+  .appbar .title{font-size:18px;font-weight:700}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:-32px;position:relative;z-index:2}
+  .mini{background:#fff;border:1px solid var(--border);border-radius:12px;padding:9px 6px;text-align:center;box-shadow:0 4px 10px rgba(0,0,0,.04)}
+  .mini .ml{font-size:9px;color:var(--muted)}
+  .mini .mv{font-size:14px;font-weight:800;margin-top:2px}
+  .card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-top:11px}
+  .ct{font-size:12px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+  .ct .edit{color:var(--primary);font-size:11px;font-weight:700}
+  .bankcard{background:linear-gradient(135deg,#1e1b4b,#4338ca);color:#fff;border:none}
+  .bankcard .ct{color:#fff;margin-bottom:10px}
+  .bankcard .ct .badge1{background:rgba(255,255,255,.18);color:#fff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:999px}
+  .bankrow{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0}
+  .bankrow .k{opacity:.75}.bankrow .v{font-weight:700}
+  .bank-num{font-size:17px;font-weight:800;letter-spacing:1px;margin:4px 0}
+  .kv{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12.5px;border-bottom:1px solid #f4f5f8}
+  .kv:last-child{border-bottom:none}.kv .k{color:var(--muted)}.kv .v{font-weight:700}
+  .wrow{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f4f5f8}
+  .wrow:last-child{border-bottom:none}
+  .wrow .a{font-weight:800;font-size:13.5px}.wrow .d{font-size:10.5px;color:var(--muted);margin-top:1px}
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700}
+  .badge.pending{background:var(--pending-bg);color:var(--pending-tx)}
+  .badge.success{background:var(--success-bg);color:var(--success-tx)}
+  .lbl{font-size:12px;color:var(--muted);margin:13px 2px 6px;font-weight:600;display:block}
+  .input{background:#fff;border:1px solid var(--border);border-radius:11px;padding:11px 12px;font-size:14px}
+  .input.lg{font-size:22px;font-weight:800;text-align:center;padding:14px}
+  .locked{background:#f1f5f9;border:1px solid var(--border);border-radius:11px;padding:11px 12px;display:flex;align-items:center;gap:9px}
+  .locked .ic{width:30px;height:30px;border-radius:8px;background:#fff;border:1px solid var(--border);display:grid;place-items:center;flex-shrink:0}
+  .locked .bn{font-weight:700;font-size:13px}.locked .ba{font-size:11px;color:var(--muted)}
+  .note{background:var(--primary-light);border:1px solid #dfe3ff;border-radius:11px;padding:9px 11px;font-size:11px;color:var(--primary-dark);margin-top:6px}
+  .btn{border-radius:13px;padding:13px;text-align:center;font-weight:800;font-size:14px}
+  .btn-p{background:var(--primary);color:#fff}
+  .tabbar{height:56px;background:#fff;border-top:1px solid var(--border);display:flex;padding-bottom:4px}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:9px;color:var(--muted);font-weight:600}
+  .tab.on{color:var(--primary)}.tab svg{width:20px;height:20px}
+  .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:40px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <h1><span class="a">YourFin</span> Rider — แอปมือถือ: กระเป๋าเงิน &amp; ถอนเงิน (ล่าสุด)</h1>
+    <p>บัญชีรับเงิน 1 ยูส = 1 บัญชี · ฟอร์มถอนล็อกใช้บัญชีที่บันทึกไว้ · (หน้า เข้าสู่ระบบ/หน้าหลัก/เช็คอิน/แผนที่/โปรไฟล์ ดูที่ mockup-mobile.png)</p>
+  </div>
+
+  <div class="phones">
+    <!-- 1. WALLET -->
+    <div class="pw">
+      <div class="phone"><div class="notch"></div><div class="screen">
+        <div class="sb light"><span>09:41</span><span>●●● ▮</span></div>
+        <div class="hero">
+          <div class="t">ยอดถอนได้</div>
+          <div class="big">฿7,028<small>.40</small></div>
+          <div class="wbtn">＋ ขอถอนเงิน</div>
+        </div>
+        <div class="pbody">
+          <div class="row3">
+            <div class="mini"><div class="ml">รายได้สะสม</div><div class="mv">฿7,928</div></div>
+            <div class="mini"><div class="ml">รออนุมัติ</div><div class="mv" style="color:var(--pending)">฿300</div></div>
+            <div class="mini"><div class="ml">จ่ายแล้ว</div><div class="mv" style="color:var(--success)">฿600</div></div>
+          </div>
+          <div class="card bankcard">
+            <div class="ct">บัญชีรับเงิน <span class="badge1">1 บัญชี</span></div>
+            <div class="bank-num">กสิกรไทย</div>
+            <div class="bankrow"><span class="k">เลขบัญชี</span><span class="v">123-4-56789-0</span></div>
+            <div class="bankrow"><span class="k">ชื่อบัญชี</span><span class="v">สมชาย ใจดี</span></div>
+            <div style="text-align:right;margin-top:6px"><span style="background:rgba(255,255,255,.2);padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700">แก้ไขบัญชี</span></div>
+          </div>
+          <div class="card">
+            <div class="ct">รายได้ของฉัน</div>
+            <div class="kv"><span class="k">คอมจากการปิดดีล</span><span class="v">฿7,250</span></div>
+            <div class="kv"><span class="k">ค่าแนะนำ / Affiliate</span><span class="v" style="color:var(--primary)">฿678</span></div>
+            <div class="kv"><span class="k">ลูกทีมที่แนะนำ</span><span class="v">2 คน</span></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none"><path d="M3 10l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>หน้าหลัก</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-5.3-7-11a7 7 0 1114 0c0 5.7-7 11-7 11z" stroke="currentColor" stroke-width="2"/></svg>เช็คอิน</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>แผนที่</div>
+          <div class="tab on"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="20" height="13" rx="3" stroke="currentColor" stroke-width="2"/><path d="M16 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>กระเป๋าเงิน</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 21a8 8 0 0116 0" stroke="currentColor" stroke-width="2"/></svg>โปรไฟล์</div>
+        </div>
+      </div></div>
+      <div class="cap">กระเป๋าเงิน<span>ยอด + บัญชีรับเงิน + รายได้</span></div>
+    </div>
+
+    <!-- 2. BANK FORM -->
+    <div class="pw">
+      <div class="phone"><div class="notch"></div><div class="screen">
+        <div class="sb light"><span>09:41</span><span>●●● ▮</span></div>
+        <div class="appbar"><div class="title">บัญชีรับเงิน</div></div>
+        <div class="pbody">
+          <div class="note">⚠️ มีบัญชีรับเงินได้เพียง <b>1 บัญชี</b> — การบันทึกจะแทนที่บัญชีเดิม</div>
+          <span class="lbl">ธนาคาร</span><div class="input">กสิกรไทย</div>
+          <span class="lbl">เลขบัญชี</span><div class="input">123-4-56789-0</div>
+          <span class="lbl">ชื่อบัญชี</span><div class="input">สมชาย ใจดี</div>
+          <div class="btn btn-p" style="margin-top:20px">บันทึกบัญชี</div>
+        </div>
+      </div></div>
+      <div class="cap">ตั้ง/แก้บัญชีรับเงิน<span>1 ยูส = 1 บัญชี</span></div>
+    </div>
+
+    <!-- 3. WITHDRAW (locked) -->
+    <div class="pw">
+      <div class="phone"><div class="notch"></div><div class="screen">
+        <div class="sb light"><span>09:41</span><span>●●● ▮</span></div>
+        <div class="appbar"><div class="title">ขอถอนเงิน</div></div>
+        <div class="pbody">
+          <div class="card" style="margin-top:2px;background:var(--primary-light);border-color:#dfe3ff">
+            <div class="kv" style="border:none"><span class="k" style="color:var(--primary-dark)">ยอดถอนได้สูงสุด</span><span class="v" style="color:var(--primary);font-size:18px">฿7,028.40</span></div>
+          </div>
+          <span class="lbl">จำนวนเงินที่ต้องการถอน</span>
+          <div class="input lg">฿ 2,000</div>
+          <span class="lbl">โอนเข้าบัญชี (ใช้บัญชีที่บันทึกไว้)</span>
+          <div class="locked">
+            <div class="ic">🔒</div>
+            <div><div class="bn">กสิกรไทย ••• 6789-0</div><div class="ba">สมชาย ใจดี</div></div>
+          </div>
+          <span class="lbl">หมายเหตุ (ถ้ามี)</span><div class="input" style="color:#9ca3af">ขอถอนรอบนี้ครับ</div>
+          <div class="btn btn-p" style="margin-top:18px">ยืนยันการขอถอน</div>
+        </div>
+      </div></div>
+      <div class="cap">ฟอร์มขอถอน (ล็อกบัญชี)<span>ใช้บัญชีที่บันทึก · แก้ไม่ได้</span></div>
+    </div>
+  </div>
+
+  <div class="foot">💰 สะท้อนการทำงานจริง: ถ้ายังไม่ตั้งบัญชี ระบบจะบล็อกการถอน + พาไปตั้งบัญชีก่อน · ตัวเลขอ้างอิงตรรกะคอม/ค่าแนะนำจริง</div>
+</div>
+</body>
+</html>
