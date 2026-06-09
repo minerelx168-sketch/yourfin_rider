@@ -1,14 +1,32 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, MapPin, BarChart3, Users } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { trpc } from "@/lib/trpc";
+import { Loader2, MapPin, BarChart3, Users, Lock } from "lucide-react";
 import { getLoginUrl } from "@/const";
 import { useLocation } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
+  const utils = trpc.useUtils();
+
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const loginMutation = trpc.auth.loginWithPassword.useMutation({
+    onSuccess: async () => {
+      setError(null);
+      await utils.auth.me.invalidate();
+    },
+    onError: err => {
+      setError(err.message || "เข้าสู่ระบบไม่สำเร็จ");
+    },
+  });
 
   useEffect(() => {
     if (!loading && isAuthenticated && user) {
@@ -20,6 +38,15 @@ export default function Home() {
       }
     }
   }, [loading, isAuthenticated, user, setLocation]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!username.trim() || !password) {
+      setError("กรุณากรอกชื่อผู้ใช้และรหัสผ่าน");
+      return;
+    }
+    loginMutation.mutate({ username: username.trim(), password });
+  };
 
   if (loading) {
     return (
@@ -52,7 +79,7 @@ export default function Home() {
         </div>
 
         <Card className="border-0 shadow-lg">
-          <CardContent className="pt-6 space-y-4">
+          <CardContent className="pt-6 space-y-5">
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="space-y-1">
                 <div className="w-10 h-10 mx-auto rounded-lg bg-green-50 flex items-center justify-center">
@@ -74,11 +101,67 @@ export default function Home() {
               </div>
             </div>
 
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="username">ชื่อผู้ใช้</Label>
+                <Input
+                  id="username"
+                  autoComplete="username"
+                  placeholder="กรอกชื่อผู้ใช้"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  disabled={loginMutation.isPending}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="password">รหัสผ่าน</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="กรอกรหัสผ่าน"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  disabled={loginMutation.isPending}
+                />
+              </div>
+
+              {error ? (
+                <p className="text-sm text-destructive text-center">{error}</p>
+              ) : null}
+
+              <Button
+                type="submit"
+                className="w-full h-12 text-base font-medium"
+                disabled={loginMutation.isPending}
+              >
+                {loginMutation.isPending ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4 mr-2" />
+                    เข้าสู่ระบบ
+                  </>
+                )}
+              </Button>
+            </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-card px-2 text-muted-foreground">หรือ</span>
+              </div>
+            </div>
+
             <Button
-              className="w-full h-12 text-base font-medium"
+              type="button"
+              variant="outline"
+              className="w-full h-11"
               onClick={() => { window.location.href = getLoginUrl(); }}
             >
-              เข้าสู่ระบบ
+              เข้าสู่ระบบด้วย Manus
             </Button>
           </CardContent>
         </Card>

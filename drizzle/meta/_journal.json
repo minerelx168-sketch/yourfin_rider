@@ -15,6 +15,13 @@
       "when": 1780481588406,
       "tag": "0001_puzzling_arachne",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1781011760578,
+      "tag": "0002_fixed_leech",
+      "breakpoints": true
     }
   ]
 }

@@ -16,6 +16,7 @@ import DashboardOverview from "./pages/dashboard/DashboardOverview";
 import DashboardLeaderboard from "./pages/dashboard/DashboardLeaderboard";
 import DashboardMap from "./pages/dashboard/DashboardMap";
 import DashboardFeed from "./pages/dashboard/DashboardFeed";
+import DashboardUsers from "./pages/dashboard/DashboardUsers";
 
 // Landing / Role router
 import Home from "./pages/Home";
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/dashboard/leaderboard" component={DashboardLeaderboard} />
       <Route path="/dashboard/map" component={DashboardMap} />
       <Route path="/dashboard/feed" component={DashboardFeed} />
+      <Route path="/dashboard/users" component={DashboardUsers} />
       {/* Fallback */}
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

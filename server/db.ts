@@ -91,6 +91,62 @@ export async function getAllUsers() {
   return db.select().from(users);
 }
 
+// ── Username/password account helpers ────────────────────────
+
+export async function getUserByUsername(username: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+/** Create a local account (username/password) provisioned by an admin/manager. */
+export async function createLocalUser(data: {
+  openId: string;
+  username: string;
+  passwordHash: string;
+  name: string;
+  role: "sales" | "manager" | "admin";
+  phone?: string | null;
+  team?: string | null;
+  region?: string | null;
+  targetDailyClose?: number;
+}): Promise<{ id: number }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(users).values({
+    openId: data.openId,
+    username: data.username,
+    passwordHash: data.passwordHash,
+    name: data.name,
+    role: data.role,
+    phone: data.phone ?? null,
+    team: data.team ?? null,
+    region: data.region ?? null,
+    loginMethod: "password",
+    ...(data.targetDailyClose !== undefined ? { targetDailyClose: data.targetDailyClose } : {}),
+  });
+  return { id: result[0].insertId };
+}
+
+export async function updateUserPassword(userId: number, passwordHash: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ passwordHash }).where(eq(users.id, userId));
+}
+
+export async function setUserActive(userId: number, active: boolean): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ active }).where(eq(users.id, userId));
+}
+
+export async function touchLastSignedIn(userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, userId));
+}
+
 // ── Store helpers ────────────────────────────────────────────
 
 export async function createStore(store: InsertStore) {
