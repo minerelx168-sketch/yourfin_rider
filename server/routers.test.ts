@@ -59,6 +59,47 @@ describe("appRouter structure", () => {
     expect(routerKeys).toContain("dashboard.feed");
     expect(routerKeys).toContain("dashboard.mapData");
     expect(routerKeys).toContain("dashboard.users");
+    // Username/password auth + account management
+    expect(routerKeys).toContain("auth.loginWithPassword");
+    expect(routerKeys).toContain("users.list");
+    expect(routerKeys).toContain("users.create");
+    expect(routerKeys).toContain("users.resetPassword");
+    expect(routerKeys).toContain("users.setActive");
+  });
+});
+
+describe("user management procedures", () => {
+  it("users.list rejects unauthenticated users", async () => {
+    const caller = appRouter.createCaller(createUnauthContext());
+    await expect(caller.users.list()).rejects.toThrow();
+  });
+
+  it("users.list rejects sales role", async () => {
+    const caller = appRouter.createCaller(createAuthContext("sales"));
+    await expect(caller.users.list()).rejects.toThrow();
+  });
+
+  it("users.create rejects unauthenticated users", async () => {
+    const caller = appRouter.createCaller(createUnauthContext());
+    await expect(
+      caller.users.create({ username: "newuser", password: "secret123", name: "New" })
+    ).rejects.toThrow();
+  });
+
+  it("users.create forbids a manager from creating an admin", async () => {
+    const caller = appRouter.createCaller(createAuthContext("manager"));
+    await expect(
+      caller.users.create({ username: "newadmin", password: "secret123", name: "X", role: "admin" })
+    ).rejects.toThrow(/พนักงานขาย/);
+  });
+});
+
+describe("auth.loginWithPassword", () => {
+  it("validates that username and password are provided", async () => {
+    const caller = appRouter.createCaller(createUnauthContext());
+    await expect(
+      caller.auth.loginWithPassword({ username: "", password: "" })
+    ).rejects.toThrow();
   });
 });
 

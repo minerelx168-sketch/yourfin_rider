@@ -1,8 +1,12 @@
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, managerProcedure, router } from "./_core/trpc";
+import { TRPCError } from "@trpc/server";
+import { nanoid } from "nanoid";
 import { z } from "zod";
+import { sdk } from "./_core/sdk";
+import { hashPassword, verifyPassword } from "./_core/password";
 import {
   createActivity,
   createStore,
@@ -18,9 +22,21 @@ import {
   updateActivityDistance,
   getAllSalesUsers,
   getAllUsers,
+  getUserById,
+  getUserByUsername,
+  createLocalUser,
+  updateUserPassword,
+  setUserActive,
+  touchLastSignedIn,
 } from "./db";
 import { storagePut } from "./storage";
 import { format } from "date-fns";
+
+/** Strip sensitive fields (passwordHash) before returning a user to the client. */
+function sanitizeUser<T extends { passwordHash?: string | null }>(user: T): Omit<T, "passwordHash"> {
+  const { passwordHash, ...rest } = user;
+  return rest;
+}
 
 // ── Haversine distance calculation ──────────────────────────
 function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -46,12 +62,138 @@ function getTodayBangkok(): string {
 export const appRouter = router({
   system: systemRouter,
   auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
+    me: publicProcedure.query(opts => (opts.ctx.user ? sanitizeUser(opts.ctx.user) : null)),
+
+    // Login with username/password (accounts provisioned by admin/manager — no OAuth)
+    loginWithPassword: publicProcedure
+      .input(z.object({
+        username: z.string().min(1, "กรุณากรอกชื่อผู้ใช้"),
+        password: z.string().min(1, "กรุณากรอกรหัสผ่าน"),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const username = input.username.toLowerCase().trim();
+        const invalid = new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง",
+        });
+
+        const user = await getUserByUsername(username);
+        if (!user) throw invalid;
+
+        const ok = await verifyPassword(input.password, user.passwordHash);
+        if (!ok) throw invalid;
+
+        if (!user.active) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "บัญชีนี้ถูกระงับการใช้งาน" });
+        }
+
+        const sessionToken = await sdk.createSessionToken(user.openId, {
+          name: user.name || username,
+          expiresInMs: ONE_YEAR_MS,
+        });
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+
+        await touchLastSignedIn(user.id);
+        return sanitizeUser(user);
+      }),
+
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+  }),
+
+  // ── User account management (ADMIN/MANAGER) ─────────────────
+  // Admins can manage any role. Managers can manage only "sales" accounts.
+  users: router({
+    list: managerProcedure.query(async () => {
+      const all = await getAllUsers();
+      return all.map(sanitizeUser);
+    }),
+
+    create: managerProcedure
+      .input(z.object({
+        username: z.string().min(3, "อย่างน้อย 3 ตัวอักษร").max(64)
+          .regex(/^[a-zA-Z0-9_.-]+$/, "ใช้ได้เฉพาะ a-z A-Z 0-9 _ . -"),
+        password: z.string().min(6, "รหัสผ่านอย่างน้อย 6 ตัวอักษร").max(128),
+        name: z.string().min(1, "กรุณากรอกชื่อ").max(255),
+        role: z.enum(["sales", "manager", "admin"]).default("sales"),
+        phone: z.string().max(20).optional(),
+        team: z.string().max(100).optional(),
+        region: z.string().max(100).optional(),
+        targetDailyClose: z.number().int().min(0).max(100).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== "admin" && input.role !== "sales") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "ผู้จัดการสร้างได้เฉพาะบัญชีพนักงานขาย (sales) เท่านั้น",
+          });
+        }
+
+        const username = input.username.toLowerCase().trim();
+        const existing = await getUserByUsername(username);
+        if (existing) {
+          throw new TRPCError({ code: "CONFLICT", message: "ชื่อผู้ใช้นี้ถูกใช้แล้ว" });
+        }
+
+        const passwordHash = await hashPassword(input.password);
+        const openId = `local_${nanoid()}`;
+        const { id } = await createLocalUser({
+          openId,
+          username,
+          passwordHash,
+          name: input.name,
+          role: input.role,
+          phone: input.phone,
+          team: input.team,
+          region: input.region,
+          targetDailyClose: input.targetDailyClose,
+        });
+
+        const created = await getUserById(id);
+        return created
+          ? sanitizeUser(created)
+          : { id, username, name: input.name, role: input.role };
+      }),
+
+    resetPassword: managerProcedure
+      .input(z.object({
+        userId: z.number(),
+        newPassword: z.string().min(6, "รหัสผ่านอย่างน้อย 6 ตัวอักษร").max(128),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const target = await getUserById(input.userId);
+        if (!target) throw new TRPCError({ code: "NOT_FOUND", message: "ไม่พบผู้ใช้" });
+        if (ctx.user.role !== "admin" && target.role !== "sales") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "ผู้จัดการรีเซ็ตรหัสได้เฉพาะบัญชีพนักงานขาย",
+          });
+        }
+        await updateUserPassword(input.userId, await hashPassword(input.newPassword));
+        return { success: true } as const;
+      }),
+
+    setActive: managerProcedure
+      .input(z.object({ userId: z.number(), active: z.boolean() }))
+      .mutation(async ({ ctx, input }) => {
+        const target = await getUserById(input.userId);
+        if (!target) throw new TRPCError({ code: "NOT_FOUND", message: "ไม่พบผู้ใช้" });
+        if (target.id === ctx.user.id) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "ไม่สามารถระงับบัญชีตัวเองได้" });
+        }
+        if (ctx.user.role !== "admin" && target.role !== "sales") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "ผู้จัดการจัดการได้เฉพาะบัญชีพนักงานขาย",
+          });
+        }
+        await setUserActive(input.userId, input.active);
+        return { success: true } as const;
+      }),
   }),
 
   // ── Activity procedures ─────────────────────────────────────
@@ -368,7 +510,8 @@ export const appRouter = router({
       }),
 
     users: managerProcedure.query(async () => {
-      return getAllSalesUsers();
+      const salesUsers = await getAllSalesUsers();
+      return salesUsers.map(sanitizeUser);
     }),
   }),
 });

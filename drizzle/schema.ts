@@ -15,6 +15,9 @@ export const users = mysqlTable("users", {
   team: varchar("team", { length: 100 }),
   region: varchar("region", { length: 100 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
+  // Username/password login (accounts created by admin/manager, no OAuth needed)
+  username: varchar("username", { length: 64 }).unique(),
+  passwordHash: varchar("passwordHash", { length: 255 }),
   role: mysqlEnum("role", ["user", "admin", "sales", "manager"]).default("sales").notNull(),
   targetDailyClose: int("targetDailyClose").default(3).notNull(),
   photoUrl: text("photoUrl"),
